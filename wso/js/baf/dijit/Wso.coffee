@@ -1,12 +1,15 @@
 define [
     'dojo/_base/declare',
     'dojo/_base/lang',
+    'dojo/dom'
     'dojo/dom-class',
     'dojo/dom-style',
-    'dojo/dom-construct',
+    'dojo/dom-construct'
+    'dojo/dom-geometry'
+    'dojo/query'
     'dijit/form/Form',
     'dijit/_Container'
-], (declare, lang, domClass, domStyle, domConstruct, Form, _Container) ->
+], (declare, lang, dom, domClass, domStyle, domConstruct, domGeometry, query, Form, _Container) ->
     declare [Form, _Container],
         dataResult: null,
         wsoDefResult: null,
@@ -34,29 +37,51 @@ define [
     #       value: field 的dom，包含 label 和 formWidget
         fields: {}
 
-    # buttonContainer: DOM
+    # buttonContainer: DOMNode
     #       操作按钮的container
         buttonContainer: null
 
-    # fieldContainer: DOM
+    # fieldContainer: DOMNode
     #       字段的container
         fieldContainer: null
 
-    # fieldClass: string
+    # fieldClass: String
     #       每个字段的class。字段是包含label和formWidget的div
         fieldClass: 'wso-field'
 
-    # gridClass: string
+    # gridClass: String
     #       grid的class
         gridClass: 'wos-grid'
 
         constructor: ->
-            # summary
+            # summary:
             #       构造
             @inherited(arguments);
-    # todo
+
+        buildRendering: ->
+            # summary:
+            #       TODO 显示加载动画，现在是一个 p
+            #       设置 containerNode
+            #       生成 buttonContainer, fieldContainer
+            @inherited arguments
+            #TODO: make this better...
+            @_loading = document.createElement("p");
+            node = @_loading;
+            domClass.add(node, "bafDijitwsoLoading");
+            node.innerHTML = "Loading...";
+            domConstruct.place(node, @domNode, "last");
+
+            @containerNode = @domNode if not @containerNode
+            @buttonContainer = domConstruct.create 'div', {class: 'wsoButtonContainer'}, @domNode
+            @fieldContainer = domConstruct.create 'div', {class: 'wsoFieldContainer'}, @domNode
+
         postCreate: ->
-            @inherited(arguments);
+            # summary:
+            #       生成控制器
+            #       todo 等待 wso 定义获取到之后生成表单
+            @inherited arguments
+            @ctrl = new ModelRefController model: @model
+
             owner = this;
             #connect the callbacks...
             #          TODO  @data.addCallback(this, "_continueWithData");
@@ -68,21 +93,105 @@ define [
             , (err)->
                 owner._abortLoad(err);
 
-        buildRendering: ->
-            @inherited(arguments);
-            #TODO: make this better...
-            @_loading = document.createElement("p");
-            node = @_loading;
-            domClass.add(node, "bafDijitwsoLoading");
-            node.innerHTML = "Loading...";
-            domConstruct.place(node, @domNode, "last");
-            # END-TODO
-            ''
+        submit: ->
+            # summary:
+            #       提交数据
+            @_submit() if not @onSubmit() == false
 
-        addChild: (widget) ->
-            domConstruct.place(widget.domNode, @domNode, "last");
-            if (@_started and !widget._started and widget.startup)
-                widget.startup();
+        _submit: -> #todo 提交数据
+            console.log '----------------------Submit----------------------'
+            console.log @model
+
+
+#        addChild: (widget) ->
+#            domConstruct.place(widget.domNode, @domNode, "last");
+#            if (@_started and !widget._started and widget.startup)
+#                widget.startup();
+
+        addChild: (widget, insertIndex)->
+            # summary:
+            #       返回添加的widget
+            # tags:
+            #       override
+            @inherited(arguments)
+            widget
+
+        addFields: (fieldDefs)->
+            # summary:
+            #       添加 控件
+            for widgetDef in fieldDefs
+                @addField(widgetDef)
+
+        addField: (fieldDef)->
+            # summary:
+            #       添加一个字段，同时把字段放到 this.fields 里面
+            container = @fieldContainer
+            label = fieldDef.label
+            key = fieldDef.key
+            widgetClass = fieldDef.type
+            wdef = fieldDef.widget || {}
+
+            wso = this
+            wdef.formWidget = this
+            wdef.value = at(@ctrl, wdef.name) if wdef.name
+            require [widgetClass], (WidgetClass)->
+                widget = new WidgetClass wdef
+                wso.addChild widget
+                ## todo to delete
+                onn widget, 'change', (newValue)->
+                    console.log newValue
+                    window.w = this
+                    domStyle.set wso.fields['1'], 'display', 'none'
+                    domStyle.set wso.fields['2'], 'visibility', 'hidden'
+                    domStyle.set wso.fields['3'], 'visible', 'false'
+                ##
+
+                field = domConstruct.create 'div', {class: wso.fieldClass}, container
+                label = domConstruct.create('label', {
+                    class: wso.fieldClass + 'Label',
+                    innerHTML: label,
+                    for: widget.get('id')
+                }, field) if label
+                domConstruct.place widget.domNode, field
+                wso.fields[key] = field
+
+        layout: ->
+            # summary:
+            #       设置 field 的多列布局
+            #       layout 方法，在resize时候触发
+            contentBox = domGeometry.getContentBox @fieldContainer
+            fieldWidth = contentBox.w / @cols
+            query('.' + @fieldClass, @fieldContainer).forEach (node)->
+                domGeometry.setMarginBox(node, {w: fieldWidth})
+                children = node.childNodes
+                if children.length == 2 and children[0].tagName == 'LABEL'
+                    domGeometry.setMarginBox children[1], {w: fieldWidth - domGeometry.getMarginBox(children[0]).w}
+
+        addField: ->
+        removeField: (field)->
+        showField: (field)->
+        hideField: (field)->
+        setEnable: (field, enable)->
+            # summary:
+            #       设置字段编辑性
+            # field: DOMNode|String
+            # enable: Boolean
+            if(typeof field != "string")
+                field = @fields[field]
+            domStyle.set field, 'readOnly', if enable then true else false
+#            domStyle.set field, 'disabled', 'disabled'
+
+        setVisible: (field, visible)->
+            # summary:
+            #       设置字段可见型
+            # field: DOMNode|String
+            # visible: Boolean
+            if(typeof field != "string")
+                field = @fields[field]
+            # collapse, inherit
+            domStyle.set field, 'visibility', if visible then 'visible' else 'hidden'
+#            domStyle.set field, 'visible', 'false'
+#            domStyle.set field, 'display', 'none'
 
         startup: ->
             if (!@_started)
