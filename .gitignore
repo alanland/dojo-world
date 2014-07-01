@@ -1,0 +1,14 @@
+# other
+*.iws
+
+# idea project files
+*.iml
+.idea
+
+# lib files
+dojo
+
+# compiled .js and .map files
+#wso/js/baf/*.js
+wso/**/*.js
+wso/**/*.map
