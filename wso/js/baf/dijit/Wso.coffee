@@ -7,9 +7,13 @@ define [
     'dojo/dom-construct'
     'dojo/dom-geometry'
     'dojo/query'
+    'dojo/on'
     'dijit/form/Form',
     'dijit/_Container'
-], (declare, lang, dom, domClass, domStyle, domConstruct, domGeometry, query, Form, _Container) ->
+    'dojox/mvc/at'
+    'dojox/mvc/ModelRefController'
+], (declare, lang, dom, domClass, domStyle, domConstruct, domGeometry, query,onn, Form, _Container, #
+    at, ModelRefController) ->
     declare [Form, _Container],
         dataResult: null,
         wsoDefResult: null,
@@ -76,6 +80,7 @@ define [
             @fieldContainer = domConstruct.create 'div', {class: 'wsoFieldContainer'}, @domNode
 
         postCreate: ->
+            console.log 'postcreate'
             # summary:
             #       生成控制器
             #       todo 等待 wso 定义获取到之后生成表单
@@ -83,15 +88,13 @@ define [
             @ctrl = new ModelRefController model: @model
 
             owner = this;
-            #connect the callbacks...
-            #          TODO  @data.addCallback(this, "_continueWithData");
-            #          TODO  @data.addErrback(this, "_abortLoad");
             @wsoDef.then (data)->
                 owner._continueWithData(data);
                 owner._continueWithWsoDef(data);
 #                lang.hitch(owner,owner._continueWithWsoDef);
             , (err)->
                 owner._abortLoad(err);
+            console.log 'end postcreate'
 
         submit: ->
             # summary:
@@ -159,6 +162,7 @@ define [
             # summary:
             #       设置 field 的多列布局
             #       layout 方法，在resize时候触发
+            console.log 'layout'
             contentBox = domGeometry.getContentBox @fieldContainer
             fieldWidth = contentBox.w / @cols
             query('.' + @fieldClass, @fieldContainer).forEach (node)->
@@ -166,11 +170,8 @@ define [
                 children = node.childNodes
                 if children.length == 2 and children[0].tagName == 'LABEL'
                     domGeometry.setMarginBox children[1], {w: fieldWidth - domGeometry.getMarginBox(children[0]).w}
+            console.log 'end layout'
 
-        addField: ->
-        removeField: (field)->
-        showField: (field)->
-        hideField: (field)->
         setEnable: (field, enable)->
             # summary:
             #       设置字段编辑性
@@ -233,6 +234,17 @@ define [
             @_buildForm();
 
         _buildForm: ->
+            console.log 'buildform'
+            domConstruct.destroy @_loading
+            delete @_loading
+
+            wsoDef = @wsoDefResult
+            @cols = wsoDef.cols
+            @addFields wsoDef.children
+            console.log 'end buildform'
+            @layout()
+
+        _buildForm2: ->
             domConstruct.destroy(@_loading);
             delete @_loading;
 
