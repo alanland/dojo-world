@@ -1,8 +1,8 @@
 define [
   'dojo/_base/declare',
-  'dojo/on',
+  'dojo/aspect',
   'dojo/topic'
-], (declare, onn, topic)->
+], (declare, aspect, topic)->
   declare null,
     # summary:
     #   导航树
@@ -38,8 +38,10 @@ define [
       @widget = new nav.widget(nav.widgetArgs)
 
       # tree的 focusNode 时间绑定，发布事件，提供订阅
-      onn @widget, 'focusNode', (node)->
+      store = @store
+      aspect.after @widget, 'focusNode', (node)->
         # todo @store 是不是当前的store
         topic.publish 'focusNavNode', @store, node.item, node
+      ,true
 
 

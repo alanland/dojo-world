@@ -20,7 +20,7 @@ define [
 
             # TODO: search for non-current, but loaded object
             # load the new current object
-            data = main.dataManager.get(oid) # todo remove main
+            data = main.dataManager.get(type, oid) # todo remove main
             wsoDef = main.wsoDefinitionsManager.get(type)
             theNewObject = new Wso data: data, wsoDef: wsoDef
 
