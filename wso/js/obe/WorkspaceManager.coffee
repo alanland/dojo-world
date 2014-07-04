@@ -8,14 +8,15 @@ define [
     declare null,
         constructor: ->
             @currentObject = nullObjectValue
-            topic.subscribe 'focusNavNode', lang.hitch(this, @_showObject)
+#            topic.subscribe 'focusNavNode', lang.hitch(this, @_showObject)
+            topic.subscribe 'focusNavNode', lang.hitch @,@_showObject
 
         _showObject: (store, item)->
             type = item['tid'] # the wosDefinition type
             oid = item['oid'] # the object id
             nid = item['id'] # the navigator id
             currentObject = @currentObject
-            return if currentObject.type = type and currentObject.oid == oid
+            return if currentObject.type == type && currentObject.oid == oid
 
             # TODO: search for non-current, but loaded object
             # load the new current object
@@ -28,7 +29,7 @@ define [
 
             # display the new current object...
             main.appContainer.addChild dojo.mixin theNewObject,
-                regions: 'center'
+                region: 'center'
                 id: nid + '_wso'
             main.appContainer.startup()
 
