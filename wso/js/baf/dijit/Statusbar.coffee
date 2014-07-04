@@ -66,7 +66,6 @@ define [
             rightEdge = domGeom.getMarginBox(domNode).w - (e1.w - e1.l) - (e2.w - e2.l)
             for i in [children.length - 1..1]
                 node = children[i].domNode
-                console.log node # todo 失败
                 rightEdge -= domGeom.getMarginBox(node).w
                 domGeom.setMarginBox node, l: rightEdge
             l = e1.l + e2.l
