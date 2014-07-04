@@ -1,6 +1,7 @@
 define [
   'dojo/_base/declare',
   'dojo/_base/lang',
+  'dojo/_base/fx'
   'dojo/dom'
   'dojo/dom-class',
   'dojo/dom-style',
@@ -13,17 +14,15 @@ define [
   'dojox/mvc/at'
   'dojox/mvc/getStateful'
   'dojox/mvc/ModelRefController'
-], (declare, lang, dom, domClass, domStyle, domConstruct, domGeometry, query, onn, Form, _Container, #
+], (declare, lang, fx, dom, domClass, domStyle, domConstruct, domGeometry, query, onn, Form, _Container, #
     at, getStateful, ModelRefController) ->
   declare [Form, _Container],
-    dataResult: null,
-    wsoDefResult: null,
-    wsoDef: null,
+    # data: dojo/Stateful
+    #       数据模型
     data: null,
-
-  # model: dojo/Stateful
-  #       数据模型
-    model: null
+    dataResult: null,
+    wsoDef: null,
+    wsoDefResult: null,
 
   # ctrl: dojox/mvc/ModelRefController
   #       控制器
@@ -71,10 +70,14 @@ define [
       #       生成 buttonContainer, fieldContainer
       @inherited arguments
       #TODO: make this better...
-      @_loading = document.createElement("p");
+      @_loading = domConstruct.toDom '''
+<div id="loadingOverlay" class="loadingOverlay pageOverlay">
+  <div class="loadingMessage">Loading...</div>
+</div>
+'''
       node = @_loading;
-      domClass.add(node, "bafDijitwsoLoading");
-      node.innerHTML = "Loading...";
+      #      domClass.add(node, "bafDijitwsoLoading");
+      #      node.innerHTML = "Loading...";
       domConstruct.place(node, @domNode, "last");
 
       @containerNode = @domNode if not @containerNode
@@ -82,12 +85,10 @@ define [
       @fieldContainer = domConstruct.create 'div', {class: 'wsoFieldContainer'}, @domNode
 
     postCreate: ->
-      console.log 'postcreate'
       # summary:
       #       生成控制器
       #       todo 等待 wso 定义获取到之后生成表单
       @inherited arguments
-      @ctrl = new ModelRefController model: @model # todo to delete
 
       owner = this;
       @wsoDef.then (data)->
@@ -97,7 +98,6 @@ define [
 #                lang.hitch(owner,owner._continueWithWsoDef);
       , (err)->
         owner._abortLoad(err);
-      console.log 'end postcreate'
 
     submit: ->
       # summary:
@@ -106,7 +106,6 @@ define [
 
     _submit: -> #todo 提交数据
       console.log '----------------------Submit----------------------'
-      console.log @model
 
 
 #        addChild: (widget) ->
@@ -165,7 +164,6 @@ define [
       # summary:
       #       设置 field 的多列布局
       #       layout 方法，在resize时候触发
-      console.log 'layout'
       contentBox = domGeometry.getContentBox @fieldContainer
       fieldWidth = contentBox.w / @cols
       query('.' + @fieldClass, @fieldContainer).forEach (node)->
@@ -173,7 +171,6 @@ define [
         children = node.childNodes
         if children.length == 2 and children[0].tagName == 'LABEL'
           domGeometry.setMarginBox children[1], {w: fieldWidth - domGeometry.getMarginBox(children[0]).w}
-      console.log 'end layout'
 
     setEnable: (field, enable)->
       # summary:
@@ -238,14 +235,18 @@ define [
       @_buildForm();
 
     _buildForm: ->
-      console.log 'buildform'
+      fx.fadeOut({
+        node: @_loading,
+        onEnd: (node)->
+          domStyle.set(node, 'display', 'none')
+      }).play()
       domConstruct.destroy @_loading
       delete @_loading
+
 
       wsoDef = @wsoDefResult
       @cols = wsoDef.cols
       @addFields wsoDef.children
-      console.log 'end buildform'
       @layout()
 
     _buildForm2: ->
