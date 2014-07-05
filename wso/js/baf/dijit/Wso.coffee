@@ -195,12 +195,12 @@ define [
         widget = new WidgetClass wdef
         wso.addChild widget
         ## todo to delete
-        onn widget, 'change', (newValue)->
-          console.log newValue
-          window.w = this
-          domStyle.set wso.fields['1'], 'display', 'none'
-          domStyle.set wso.fields['2'], 'visibility', 'hidden'
-          domStyle.set wso.fields['3'], 'visible', 'false'
+#        onn widget, 'change', (newValue)->
+#          console.log newValue
+#          window.w = this
+#          domStyle.set wso.fields['1'], 'display', 'none'
+#          domStyle.set wso.fields['2'], 'visibility', 'hidden'
+#          domStyle.set wso.fields['3'], 'visible', 'false'
         ##
 
         field = domConstruct.create 'div', {class: wso.fieldClass}, container
