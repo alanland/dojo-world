@@ -9,17 +9,22 @@ define [
   'dojo/dom-geometry'
   'dojo/query'
   'dojo/on'
+  'dojo/aspect'
   'dijit/form/Form',
   'dijit/_Container'
   'dojox/mvc/at'
   'dojox/mvc/getStateful'
   'dojox/mvc/ModelRefController'
   'baf/util'# todo
-], (declare, lang, fx, dom, domClass, domStyle, domConstruct, domGeometry, query, onn, Form, _Container, #
+], (declare, lang, fx, dom, domClass, domStyle, domConstruct, domGeometry, query, onn, aspect, #
+    Form, _Container, #
     at, getStateful, ModelRefController, #
     WsoDefUtil) ->
   wsoItemType =
     panel: 'panel'
+    widget: 'widget'
+    actions: 'actions'
+    action: 'action'
   wsoItemDefault =
     panel:
       width: '100%'
@@ -28,22 +33,27 @@ define [
       cols: 0
       children: []
       dom: {}
+    widget:
+      key: undefined
+      widgetArgs: {}
 
   declare [Form, _Container],
     # data: dojo/Stateful
     #       数据模型
-    data: null,
-    dataResult: null,
-    wsoDef: null,
-    wsoDefResult: null,
+    data: null
+    dataResult: null
+    wsoDef: null
+    wsoDefResult: null
+    wsoItems: {}
+    actions: []
 
   # ctrl: dojox/mvc/ModelRefController
   #       控制器
     ctrl: null
 
-  # cols: Integer
-  #       当前 Wso 有多少列，用作 Field(FormWidget) 的布局
-    cols: 2
+#  # cols: Integer
+#  #       当前 Wso 有多少列，用作 Field(FormWidget) 的布局
+#    cols: 2
 
   # buttons: Object
   #       当前wso的操作按钮集合
@@ -145,15 +155,28 @@ define [
       throw new Error('error type ') if typeof wsoItem is not 'object'
       for k,v of wsoItem
         switch k
+          when wsoItemType.actions
+            @actions = @actions.concat v
+          when wsoItemType.action
+            @actions.push v
           when wsoItemType.panel
             @addPanel WsoDefUtil.setDefaults v, wsoItemDefault.panel
+          when wsoItemType.widget
+            @addWidget WsoDefUtil.setDefaults v, wsoItemDefault.widget
           else
             throw new Error('xxx')
 
     addPanel: (def)->
       node = domConstruct.create 'div', lang.mixin(def.dom, cols: def.cols), @domNode
       domClass.add node, @panelClass
+      @wsoItems[def.key] = node if def.key
       @addFields def.fields, node if def.fields
+    addWidget: (def)->
+      wso = this
+      wsoItems = @wsoItems
+      require async: false, [def.type], (ctor)->
+        child = wso.addChild new ctor(lang.mixin def.widgetArgs, wso:wso)
+        wsoItems[def.key] = child if def.key
 
 
     addField: (fieldDef, refNode)->
@@ -168,7 +191,7 @@ define [
       wso = this
       wdef.formWidget = this
       wdef.value = at(@ctrl, wdef.name) if wdef.name
-      require {async:false}, [widgetClass], (WidgetClass)->
+      require {async: false}, [widgetClass], (WidgetClass)->
         widget = new WidgetClass wdef
         wso.addChild widget
         ## todo to delete
@@ -280,7 +303,7 @@ define [
       @_loading.innerHTML = "FAILED!!";
 
     _finishLoad: ->
-      if (@wsoDefResult.require)
+      if (@wsoDefResult.require) # todo 是否需要require
         require @wsoDefResult.require, ->
       @_buildForm();
 
@@ -301,6 +324,9 @@ define [
       #      @cols = wsoDef.cols
       #      @addFields wsoDef.children if wsoDef.children
       #      @addGrid wsoDef.grid if wsoDef.grid
+      if @actions
+        for action in @actions
+          action.call this
       @layout()
 
     _buildForm2: ->
