@@ -168,7 +168,7 @@ define [
       wso = this
       wdef.formWidget = this
       wdef.value = at(@ctrl, wdef.name) if wdef.name
-      require [widgetClass], (WidgetClass)->
+      require {async:false}, [widgetClass], (WidgetClass)->
         widget = new WidgetClass wdef
         wso.addChild widget
         ## todo to delete
@@ -197,7 +197,7 @@ define [
       wso = this
       wdef.formWidget = this
       wdef.value = at(@ctrl, wdef.name) if wdef.name
-      require
+      require # todo
 
     layout: ->
       # summary:
