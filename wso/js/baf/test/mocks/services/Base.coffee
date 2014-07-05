@@ -7,7 +7,7 @@ define [
         # summary:
         #       mock服务的父类
         constructor: (args) ->
-            @delay = args.delay || 100
+            @delay = args.delay || 1
 
         getService: ->
             lang.hitch this, 'call'

@@ -14,8 +14,21 @@ define [
   'dojox/mvc/at'
   'dojox/mvc/getStateful'
   'dojox/mvc/ModelRefController'
+  'baf/util'# todo
 ], (declare, lang, fx, dom, domClass, domStyle, domConstruct, domGeometry, query, onn, Form, _Container, #
-    at, getStateful, ModelRefController) ->
+    at, getStateful, ModelRefController, #
+    WsoDefUtil) ->
+  wsoItemType =
+    panel: 'panel'
+  wsoItemDefault =
+    panel:
+      width: '100%'
+      height: '100%'
+      key: undefined
+      cols: 0
+      children: []
+      dom: {}
+
   declare [Form, _Container],
     # data: dojo/Stateful
     #       数据模型
@@ -52,11 +65,12 @@ define [
 
   # fieldClass: String
   #       每个字段的class。字段是包含label和formWidget的div
-    fieldClass: 'wso-field'
+    fieldClass: 'wsoField'
 
   # gridClass: String
   #       grid的class
-    gridClass: 'wos-grid'
+    gridClass: 'wsoGrid'
+    panelClass: 'wsoPanel'
 
     constructor: ->
       # summary:
@@ -121,16 +135,31 @@ define [
       @inherited(arguments)
       widget
 
-    addFields: (fieldDefs)->
+    addFields: (fieldDefs, refNode)->
       # summary:
       #       添加 控件
       for widgetDef in fieldDefs
-        @addField(widgetDef)
+        @addField(widgetDef, refNode)
 
-    addField: (fieldDef)->
+    addWsoItemDef: (wsoItem)->
+      throw new Error('error type ') if typeof wsoItem is not 'object'
+      for k,v of wsoItem
+        switch k
+          when wsoItemType.panel
+            @addPanel WsoDefUtil.setDefaults v, wsoItemDefault.panel
+          else
+            throw new Error('xxx')
+
+    addPanel: (def)->
+      node = domConstruct.create 'div', lang.mixin(def.dom, cols: def.cols), @domNode
+      domClass.add node, @panelClass
+      @addFields def.fields, node if def.fields
+
+
+    addField: (fieldDef, refNode)->
       # summary:
       #       添加一个字段，同时把字段放到 this.fields 里面
-      container = @fieldContainer
+      container = refNode || @domNode
       label = fieldDef.label
       key = fieldDef.key
       widgetClass = fieldDef.type
@@ -159,18 +188,39 @@ define [
         }, field) if label
         domConstruct.place widget.domNode, field
         wso.fields[key] = field
+    addGrid: (gridDef)->
+      container = @fieldContainer
+      label = gridDef.label
+      key = gridDef.key
+      widgetClass = gridDef.type
+      wdef = gridDef.widget || {}
+      wso = this
+      wdef.formWidget = this
+      wdef.value = at(@ctrl, wdef.name) if wdef.name
+      require
 
     layout: ->
       # summary:
       #       设置 field 的多列布局
       #       layout 方法，在resize时候触发
-      contentBox = domGeometry.getContentBox @fieldContainer
-      fieldWidth = contentBox.w / @cols
-      query('.' + @fieldClass, @fieldContainer).forEach (node)->
-        domGeometry.setMarginBox(node, {w: fieldWidth})
-        children = node.childNodes
-        if children.length == 2 and children[0].tagName == 'LABEL'
-          domGeometry.setMarginBox children[1], {w: fieldWidth - domGeometry.getMarginBox(children[0]).w}
+      fieldClass = @fieldClass
+      query('.' + @panelClass, @domNode).forEach (panel)->
+        cols = panel.getAttribute('cols')
+        if cols > 0
+          panelBox = domGeometry.getContentBox panel
+          fieldWidth = parseInt(panelBox.w / cols)
+          query('.' + fieldClass, panel).forEach (field)->
+            domGeometry.setMarginBox field, w: fieldWidth
+            children = field.childNodes
+            if children.length == 2 and children[0].tagName == 'LABEL'
+              domGeometry.setMarginBox children[1], w: fieldWidth - domGeometry.getMarginBox(children[0]).w
+#      contentBox = domGeometry.getContentBox @domNode
+#      fieldWidth = contentBox.w / @cols
+#      query('.' + @fieldClass, @domNode).forEach (node)->
+#        domGeometry.setMarginBox(node, {w: fieldWidth})
+#        children = node.childNodes
+#        if children.length == 2 and children[0].tagName == 'LABEL'
+#          domGeometry.setMarginBox children[1], {w: fieldWidth - domGeometry.getMarginBox(children[0]).w}
 
     setEnable: (field, enable)->
       # summary:
@@ -245,8 +295,12 @@ define [
 
 
       wsoDef = @wsoDefResult
-      @cols = wsoDef.cols
-      @addFields wsoDef.children
+      ## todo
+      for itemDef in wsoDef
+        @addWsoItemDef itemDef
+      #      @cols = wsoDef.cols
+      #      @addFields wsoDef.children if wsoDef.children
+      #      @addGrid wsoDef.grid if wsoDef.grid
       @layout()
 
     _buildForm2: ->
