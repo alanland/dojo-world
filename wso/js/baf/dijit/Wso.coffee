@@ -173,7 +173,8 @@ define [
           else
             throw new Error('xxx')
     addHTML: (def)->
-      node = domConstruct.toDom def.html, @domNode
+      node = domConstruct.toDom def.html
+      domConstruct.place node, @domNode
       @wsoItems[def.key] = node if def.key
 
     addPanel: (def)->
