@@ -10,18 +10,20 @@ define [
     currentObject: null
     usetab: true
     tabContainer: null
-    constructor: (args)->
+    constructor: ->
       @currentObject = nullObjectValue
       #            topic.subscribe 'focusNavNode', lang.hitch(this, @_showObject)
       topic.subscribe 'focusNavNode', lang.hitch @, @_showObject
 
     getWsoByType: (item)->
+      # item: navigator item
       return if not @usetab
-      type = item.tid
       results = []
       for child in @tabContainer.getChildren()
-        if child.tid == type
-          results.push type
+        cItem = child.navigator
+        if cItem.tid == item.tid and cItem.oid == item.oid
+          results.push child
+      results
 
     _showObject: (store, item)->
       # todo store 什么时候穿寄来的，还没有使用
@@ -37,12 +39,14 @@ define [
       wsoDef = main.wsoDefinitionsManager.get(type)
       theNewObject = new Wso {
         data: data,wsoDef: wsoDef, closable: true,
-        tid: type, oid: oid, nid:nid
+        navigator: item,
+        title: item.name
       }
 
       # destroy the old current object...
-#      @destroy()
+      @destroy()
 
+      # 如果使用tab，初始化tabContainer
       if @usetab and not @tabContainer
         @tabContainer = new TabContainer
           style: "height: 500px; width: 100%;"
@@ -50,7 +54,7 @@ define [
         main.appContainer.addChild lang.mixin @tabContainer,
           region: 'center'
 
-      # display the new current object...
+      # 显示新的当前界面
       if @usetab
         sameType = @getWsoByType(item)
         if sameType.length>0
@@ -73,12 +77,12 @@ define [
 
     destroy: ->
       currentObject = @currentObject
-      if currentObject.form
-        if @usetab
-          @tabContainer.removeChild currentObject.form
-        else
+      if not @usetab
+        if currentObject.form
+#          @tabContainer.removeChild currentObject.form
+#        else
           main.appContainer.removeChild currentObject.form
-        currentObject.form.destroyRecursive()
+          currentObject.form.destroyRecursive()
       currentObject = nullObjectValue
 
 

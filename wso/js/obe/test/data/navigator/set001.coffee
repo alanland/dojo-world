@@ -1,5 +1,5 @@
 define ->
-  oid = 0
+  oid = 1
   type = {
     root: 0,
     folder: 1,

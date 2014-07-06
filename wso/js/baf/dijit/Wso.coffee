@@ -50,9 +50,7 @@ define [
     wsoDefResult: null
     wsoItems: {}
     actions: []
-    tid: null
-    oid: null
-    nid: null
+    navigator: {}
 
   # ctrl: dojox/mvc/ModelRefController
   #       控制器
