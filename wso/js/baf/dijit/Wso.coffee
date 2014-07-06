@@ -156,40 +156,6 @@ define [
       for widgetDef in fieldDefs
         @addField(widgetDef, refNode)
 
-    addWsoItemDef: (wsoItem)->
-      throw new Error('error type ') if typeof wsoItem is not 'object'
-      for k,v of wsoItem
-        switch k
-          when wsoItemType.html
-            @addHTML WsoDefUtil.setDefaults v, wsoItemDefault.html
-          when wsoItemType.actions
-            @actions = @actions.concat v
-          when wsoItemType.action
-            @actions.push v
-          when wsoItemType.panel
-            @addPanel WsoDefUtil.setDefaults v, wsoItemDefault.panel
-          when wsoItemType.widget
-            @addWidget WsoDefUtil.setDefaults v, wsoItemDefault.widget
-          else
-            throw new Error('xxx')
-    addHTML: (def)->
-      node = domConstruct.toDom def.html
-      domConstruct.place node, @domNode
-      @wsoItems[def.key] = node if def.key
-
-    addPanel: (def)->
-      node = domConstruct.create 'div', lang.mixin(def.dom, cols: def.cols), @domNode
-      domClass.add node, @panelClass
-      @wsoItems[def.key] = node if def.key
-      @addFields def.fields, node if def.fields
-    addWidget: (def)->
-      wso = this
-      wsoItems = @wsoItems
-      require async: false, [def.type], (ctor)->
-        child = wso.addChild new ctor(lang.mixin def.widgetArgs, wso: wso)
-        wsoItems[def.key] = child if def.key
-
-
     addField: (fieldDef, refNode)->
       # summary:
       #       添加一个字段，同时把字段放到 this.fields 里面
@@ -222,6 +188,49 @@ define [
         }, field) if label
         domConstruct.place widget.domNode, field
         wso.fields[key] = field
+    addWsoItemDef: (wsoItem, refNode)->
+      throw new Error('error type ') if typeof wsoItem is not 'object'
+      for k,v of wsoItem
+        curWsoNode = refNode
+        switch k
+          when wsoItemType.html
+            curWsoNode = @addHTML WsoDefUtil.setDefaults(v, wsoItemDefault.html), refNode
+          when wsoItemType.actions
+            curWsoNode = @actions = @actions.concat v
+          when wsoItemType.action
+            curWsoNode = @actions.push v
+          when wsoItemType.panel
+            curWsoNode = @addPanel WsoDefUtil.setDefaults(v, wsoItemDefault.panel), refNode
+          when wsoItemType.widget
+            curWsoNode = @addWidget WsoDefUtil.setDefaults(v, wsoItemDefault.widget), refNode
+          else
+            throw new Error('xxx')
+        if v.children and v.children.length>0
+          for w in v.children
+            @addWsoItemDef w, curWsoNode # todo 指定添加方案，现在无法堆
+
+    addHTML: (def, refNode)->
+      node = domConstruct.toDom def.html
+      domConstruct.place node, refNode
+      @wsoItems[def.key] = node if def.key
+      node
+
+    addPanel: (def, refNode)->
+      node = domConstruct.create 'div', lang.mixin(def.dom, cols: def.cols), refNode
+      domClass.add node, @panelClass
+      @wsoItems[def.key] = node if def.key
+      @addFields def.fields, node if def.fields
+      node
+    addWidget: (def, refNode)->
+      wso = this
+      wsoItems = @wsoItems
+      curWsoItem = null
+      require async: false, [def.type], (ctor)->
+        curWsoItem = child = new ctor(lang.mixin def.widgetArgs, wso: wso)
+        domConstruct.place child.domNode, refNode
+        wsoItems[def.key] = child if def.key
+      curWsoItem.containerNode || curWsoItem.domNode
+
     addGrid: (gridDef)->
       container = @fieldContainer
       label = gridDef.label
@@ -331,7 +340,7 @@ define [
       wsoDef = @wsoDefResult
       ## todo
       for itemDef in wsoDef
-        @addWsoItemDef itemDef
+        @addWsoItemDef itemDef, @domNode
       #      @cols = wsoDef.cols
       #      @addFields wsoDef.children if wsoDef.children
       #      @addGrid wsoDef.grid if wsoDef.grid

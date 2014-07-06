@@ -18,6 +18,20 @@ define [
         html: '''
 <div><a href="#">click me</a></div>
 '''
+        children: [
+          {
+            widget:
+              type: 'dijit/form/Button'
+              widgetArgs:
+                label: '查询show'
+                onClick: (e)->
+                  fx.fadeIn(
+                    node: @wso.wsoItems.query.domNode
+                    onEnd: (node)->
+                      domStyle.set node, 'display', 'block'
+                  ).play()
+          }
+        ]
     }
     {
       widget:
@@ -58,5 +72,19 @@ define [
         widgetArgs:
           title: '查询'
           content: 'someconent'
+        children: [
+          {
+            widget:
+              type: 'dijit/form/Button'
+              widgetArgs:
+                label: '查询show'
+                onClick: (e)->
+                  fx.fadeIn(
+                    node: @wso.wsoItems.query.domNode
+                    onEnd: (node)->
+                      domStyle.set node, 'display', 'block'
+                  ).play()
+          }
+        ]
     }
   ]
