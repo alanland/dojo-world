@@ -14,6 +14,12 @@ define [
       ]
     }
     {
+      html:
+        html: '''
+<div><a href="#">click me</a></div>
+'''
+    }
+    {
       widget:
         type: 'dijit/form/Button'
         widgetArgs:

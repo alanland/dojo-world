@@ -21,11 +21,15 @@ define [
     at, getStateful, ModelRefController, #
     WsoDefUtil) ->
   wsoItemType =
+    html: 'html'
     panel: 'panel'
     widget: 'widget'
     actions: 'actions'
     action: 'action'
   wsoItemDefault =
+    html:
+      key: undefined
+      html: ''
     panel:
       width: '100%'
       height: '100%'
@@ -46,6 +50,9 @@ define [
     wsoDefResult: null
     wsoItems: {}
     actions: []
+    tid: null
+    oid: null
+    nid: null
 
   # ctrl: dojox/mvc/ModelRefController
   #       控制器
@@ -155,6 +162,8 @@ define [
       throw new Error('error type ') if typeof wsoItem is not 'object'
       for k,v of wsoItem
         switch k
+          when wsoItemType.html
+            @addHTML WsoDefUtil.setDefaults v, wsoItemDefault.html
           when wsoItemType.actions
             @actions = @actions.concat v
           when wsoItemType.action
@@ -165,6 +174,9 @@ define [
             @addWidget WsoDefUtil.setDefaults v, wsoItemDefault.widget
           else
             throw new Error('xxx')
+    addHTML: (def)->
+      node = domConstruct.toDom def.html, @domNode
+      @wsoItems[def.key] = node if def.key
 
     addPanel: (def)->
       node = domConstruct.create 'div', lang.mixin(def.dom, cols: def.cols), @domNode
@@ -175,7 +187,7 @@ define [
       wso = this
       wsoItems = @wsoItems
       require async: false, [def.type], (ctor)->
-        child = wso.addChild new ctor(lang.mixin def.widgetArgs, wso:wso)
+        child = wso.addChild new ctor(lang.mixin def.widgetArgs, wso: wso)
         wsoItems[def.key] = child if def.key
 
 
@@ -195,12 +207,12 @@ define [
         widget = new WidgetClass wdef
         wso.addChild widget
         ## todo to delete
-#        onn widget, 'change', (newValue)->
-#          console.log newValue
-#          window.w = this
-#          domStyle.set wso.fields['1'], 'display', 'none'
-#          domStyle.set wso.fields['2'], 'visibility', 'hidden'
-#          domStyle.set wso.fields['3'], 'visible', 'false'
+        #        onn widget, 'change', (newValue)->
+        #          console.log newValue
+        #          window.w = this
+        #          domStyle.set wso.fields['1'], 'display', 'none'
+        #          domStyle.set wso.fields['2'], 'visibility', 'hidden'
+        #          domStyle.set wso.fields['3'], 'visible', 'false'
         ##
 
         field = domConstruct.create 'div', {class: wso.fieldClass}, container
