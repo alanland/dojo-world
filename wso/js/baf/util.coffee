@@ -9,7 +9,7 @@ define [
       for p of defaults
         continue if empty[p] && `empty[p] == defaults[p]`
         if args[p] is undefined
-          args[p] = defaults[p]
+          args[p] = lang.clone defaults[p]
         else if dojo.isObject defaults[p]
           util.setDefaults args[p], defaults[p]
       args
