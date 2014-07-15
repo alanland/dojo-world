@@ -67,6 +67,62 @@ define [
     }
     {
       widget:
+        key: 'query'
+        type: 'dijit/TitlePane'
+        widgetArgs:
+          title: '查询'
+          content: 'someconent'
+    }
+    {
+      widget:
+        key: 'query'
+        type: 'dijit/TitlePane'
+        widgetArgs:
+          title: '查询'
+          content: 'someconent'
+    }
+    {
+      widget:
+        key: 'query'
+        type: 'dijit/TitlePane'
+        widgetArgs:
+          title: '查询'
+          content: 'someconent'
+    }
+    {
+      widget:
+        key: 'query'
+        type: 'dijit/TitlePane'
+        widgetArgs:
+          title: '查询'
+          content: 'someconent'
+    }
+    {
+      widget:
+        key: 'query'
+        type: 'dijit/TitlePane'
+        widgetArgs:
+          title: '查询'
+          content: 'someconent'
+    }
+    {
+      widget:
+        key: 'query'
+        type: 'dijit/TitlePane'
+        widgetArgs:
+          title: '查询'
+          content: 'someconent'
+    }
+    {
+      widget:
+        key: 'query'
+        type: 'dijit/TitlePane'
+        widgetArgs:
+          title: '查询'
+          content: 'someconent'
+    }
+    {
+      widget:
         key: 'query2'
         type: 'dijit/TitlePane'
         widgetArgs:

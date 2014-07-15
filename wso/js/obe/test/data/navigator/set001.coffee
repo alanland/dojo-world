@@ -10,6 +10,7 @@ define ->
     {id: '1', name: 'Login', type: type.demographics, tid: 'obe/test/data/wsoDefinitions/Login', oid: oid++, parent: 'root'},
     {id: '2', name: 'Users', type: type.demographics, tid: 'obe/test/data/wsoDefinitions/GridUser', oid: oid++, parent: 'root'},
     {id: '3', name: 'Report', type: type.demographics, tid: 'obe/test/data/wsoDefinitions/Report', oid: oid++, parent: 'root'},
+    {id: '4', name: '工具栏', type: type.demographics, tid: 'obe/test/data/wsoDefinitions/Toolbar', oid: oid++, parent: 'root'},
     {id: 'Investigators', name: '3 Investigators', type: type.folder, tid: 3, oid: oid++, parent: 'root'},
     {id: 'Braker', name: '4 Braker', type: type.folder, tid: 4, oid: oid++, parent: 'root'},
     {id: 'Harris', name: 'Harris', type: type.folder, oid: oid++, parent: 'root'},
