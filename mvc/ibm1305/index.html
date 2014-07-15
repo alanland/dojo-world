@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title></title>
+    <link rel="stylesheet" href="http://localhost/www/dojo/dijit/themes/claro/claro.css" media="screen">
+    <!--<link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.5.0/pure-min.css">-->
+    <link rel="stylesheet" href="css/main.css" media="screen">
+</head>
+<body class="claro">
+<script>
+    contextPath = location.pathname.substring(0, location.pathname.lastIndexOf('/'));
+    dojoConfig = {
+        async: true,
+        parseOnLoad: true,
+        packages: [
+            {name: "app", location: contextPath + "/js/app"}
+        ]
+    };
+</script>
+<script src="http://localhost/www/dojo/dojo/dojo.js"></script>
+<a href="http://www.ibm.com/developerworks/cn/web/1305_zhouxiang_dojomvc/index.html?cadat-" target="_blank">IBM文章</a>
+<div id="container">
+</div>
+
+<script>
+    require(['app/main'], function () {
+    });
+</script>
+</body>
+</html>
