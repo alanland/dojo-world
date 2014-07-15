@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title></title>
+    <link rel="stylesheet" href="http://localhost/www/dojo/dijit/themes/claro/claro.css" media="screen">
+    <link rel="stylesheet" href="css/style.css" media="screen">
+    <link rel="stylesheet" href="js/obe/obe.css" media="screen">
+</head>
+<body class="claro">
+<div id="bafLoading">
+    <p>loading...</p>
+</div>
+
+<script>
+    contextPath = location.pathname.substring(0, location.pathname.lastIndexOf('/'));
+    dojoConfig = {
+        async: true,
+        parseOnLoad: true,
+        packages: [
+            {name: "baf", location: contextPath + "/js/baf"},
+            {name: "obe", location: contextPath + "/js/obe"},
+            {name: "lib", location: contextPath + "/js/lib"}
+        ]
+    };
+</script>
+<script src="http://localhost/www/dojo/dojo/dojo.js"></script>
+<!--<script src="../dojo/dojo/dojo.js"></script>-->
+<script>
+    require(["obe/main", 'lib/underscore', "dojo/domReady!"], function (main,_) {
+//        window._ = _;
+        // eg: location.search = "?test=run001"
+        var testId = location.search.match(/(\?test\=)(\w+)/);
+        if(testId){
+            require(['obe/test/tests/'+testId[2]],function(test){
+                console.log(test);
+            });
+        } else {
+            main.startup({});
+        }
+    });
+</script>
+</body>
+</html>
