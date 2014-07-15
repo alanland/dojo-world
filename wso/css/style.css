@@ -1,0 +1,88 @@
+html, body {
+    height: 100%;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+#menu {
+    border: 1px solid black;
+    /*background: #000;*/
+}
+
+#navigator {
+    background: rgba(255,255,255, 0.9);
+    border-radius: 7px 0 0;
+    box-shadow: rgba(0, 0, 0, 0.2) 0px 0px 7px 0px;
+    border: 0;
+}
+
+#workspace {
+    border: 0;
+    background: #A0A0D0;
+}
+
+#status {
+    border: 0;
+    background: yellow;
+}
+
+.test1 {
+    background-color: #0089CE;
+}
+
+/*wso field*/
+
+.wsoField {
+    display: inline-block;
+    margin: 3px 0;
+}
+
+.wsoFieldLabel {
+    display: inline-block;
+    width: 100px;
+    text-align: right;
+    padding: 0 0.5em;
+}
+
+.dijitBorderContainer-child {
+
+}
+
+/*loading overlay*/
+html, body {
+    height: 100%;
+    margin: 0;
+    overflow: hidden;
+    padding: 0;
+    background: url(http://x.srcdd.com/farm1/80f946/b6ec31b5/03550.jpg) scroll;
+    background: url("//d2hkcehpyog59.cloudfront.net/backgrounds/566ab97d187c40e3aa8da7550d84fc9e613d796a/2048/01.jpg") !important;
+}
+
+.pageOverlay {
+    top: 0;
+    left: 0;
+    position: absolute;
+    height: 100%;
+    width: 100%;
+    z-index: 1001;
+    display: block;
+}
+
+#loadingOverlay {
+    background: #fff url('http://localhost/www/dojo/dijit/themes/claro/images/loadingAnimation.gif') no-repeat 10px 23px;
+}
+
+.loadingMessage {
+    padding: 25px 40px;
+    color: #999;
+}
+
+/*end loading overlay*/
+.wsoContainerNode {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    overflow-x: hidden;
+    overflow-y: auto;
+}
