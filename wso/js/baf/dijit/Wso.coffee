@@ -112,6 +112,7 @@ define [
       @containerNode = @domNode if not @containerNode
       @buttonContainer = domConstruct.create 'div', {class: 'wsoButtonContainer'}, @domNode
       @fieldContainer = domConstruct.create 'div', {class: 'wsoFieldContainer'}, @domNode
+      @containerNode = domConstruct.create 'div', {class: 'wsoContainerNode'}, @domNode
 
     postCreate: ->
       # summary:
@@ -205,7 +206,7 @@ define [
             curWsoNode = @addWidget WsoDefUtil.setDefaults(v, wsoItemDefault.widget), refNode
           else
             throw new Error('xxx')
-        if v.children and v.children.length>0
+        if v.children and v.children.length > 0
           for w in v.children
             @addWsoItemDef w, curWsoNode # todo 指定添加方案，现在无法堆
 
@@ -340,7 +341,7 @@ define [
       wsoDef = @wsoDefResult
       ## todo
       for itemDef in wsoDef
-        @addWsoItemDef itemDef, @domNode
+        @addWsoItemDef itemDef, @containerNode
       #      @cols = wsoDef.cols
       #      @addFields wsoDef.children if wsoDef.children
       #      @addGrid wsoDef.grid if wsoDef.grid

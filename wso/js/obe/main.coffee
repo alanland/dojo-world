@@ -13,6 +13,7 @@ define [
   'dijit/layout/BorderContainer',
   'dijit/layout/ContentPane',
   'dijit/Tree',
+  'baf/extend/allExtends'
 ], (Navigator, WorkspaceManager, Statusbar, util, ItemManager, #
     MenuBand, LazyTreeStore, LazyTreeModel, WsoDefinitionsManager, #
     DataManager, domConstruct, BorderContainer, ContentPane, Tree) ->

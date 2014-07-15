@@ -23,6 +23,8 @@ define ->
             type: 'dijit/form/Button'
             widget:
               label: 'Login'
+              onClick: ->
+                alert 'login clicked.'
           }
         ]
   ]
