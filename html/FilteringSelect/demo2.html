@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html >
+<head>
+
+    <link rel="stylesheet" href="../../lib/dojo-release-1.9.1-src/dijit/themes/claro/claro.css">
+
+    <script>dojoConfig = {async: true, parseOnLoad: true}</script>
+    <script src='../../lib/dojo-release-1.9.1-src/dojo/dojo.js'></script>
+
+    <script>
+        require(["dojo/dojo/parser", "dijit/form/FilteringSelect"]);
+    </script>
+</head>
+<body class="claro">
+<select data-dojo-type="dijit/form/FilteringSelect" id="fruit" name="fruit">
+    <option value="AP">Apples</option>
+    <option value="OR" selected>Oranges</option>
+    <option value="PE" >Pears</option>
+</select>
+</body>
+</html>

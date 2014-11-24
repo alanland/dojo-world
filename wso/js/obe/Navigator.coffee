@@ -1,9 +1,11 @@
 define [
   'dojo/_base/declare',
+  'dojo/on'
   'dojo/aspect',
   'dojo/topic'
-], (declare, aspect, topic)->
+], (declare, onn, aspect, topic)->
   declare null,
+    showRoot: false
     # summary:
     #   导航树
 
@@ -36,6 +38,7 @@ define [
         @model = new nav.model(nav.modelArgs)
         nav.widgetArgs.model = @model
       @widget = new nav.widget(nav.widgetArgs)
+      @widget.startup()
 
       # tree的 focusNode 时间绑定，发布事件，提供订阅
       store = @store
@@ -43,5 +46,11 @@ define [
         # todo @store 是不是当前的store
         topic.publish 'focusNavNode', @store, node.item, node
       ,true
+      # click 事件发布，参数为item
+      onn @widget, 'click', (item)->
+        topic.publish 'clickNavNode', item
+      window.tree = @widget
+
+
 
 

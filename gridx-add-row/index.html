@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="http://localhost/www/dojo/bootstrap-3.1.1-dist/css/bootstrap.css">
+
+    <link rel="stylesheet" href="http://localhost/www/dojo/dijit/themes/claro/claro.css">
+    <link rel="stylesheet" href="http://localhost/www/dojo/gridx/tests/support/common.css">
+    <link rel="stylesheet" href="style.css">
+    <script>dojoConfig = {parseOnLoad: true}</script>
+    <!--<script data-dojo-config="async: 1,parseOnLoad: true"
+                src="//ajax.googleapis.com/ajax/libs/dojo/1.8.5/dojo/dojo.js"></script>-->
+    <script data-dojo-config="async: true, parseOnLoad: true"
+            src="http://localhost/www/dojo/dojo/dojo.js"></script>
+
+    <meta name="description" content="DojoGrid Add Row"/>
+    <meta charset=utf-8/>
+    <title>JS Bin</title>
+</head>
+<body class="claro">
+<script>
+    require([
+        "dojo/parser", "dijit/form/Form",
+        "dijit/form/Button",
+        "dijit/form/ValidationTextBox",
+        "dijit/form/DateTextBox",
+        "dijit/form/NumberTextBox"
+    ]);
+</script>
+<div class="container">
+    <div class="row col-lg-12">
+        <div id="myForm">
+            <input id='_grid1' type='hidden' name='_grid1' value='123' data-dojo-type="dijit/form/ValidationTextBox"/>
+            <table class="normal">
+                <tr>
+                    <td><label for="my_name">Name:</label></td>
+                    <td><input type="text" id="my_name" name="my_name" required="true"
+                               data-dojo-type="dijit/form/ValidationTextBox"/></td>
+                </tr>
+                <tr>
+                    <td><label for="date">Date of birth:</label></td>
+                    <td><input type="text" id="date" name="date" data-dojo-type="dijit/form/DateTextBox"/></td>
+                </tr>
+                <tr>
+                    <td><label for="datetime">Date of birth:</label></td>
+                    <td><input type="text" id="datetime" name="datetime"/></td>
+                </tr>
+            </table>
+
+            <button data-dojo-type="dijit/form/Button" type="button" onClick="getValues">取值</button>
+            <button data-dojo-type="dijit/form/Button" type="submit" name="submitButton" value="Submit">提交数据</button>
+            <button data-dojo-type="dijit/form/Button" type="reset">Reset</button>
+            <button id="ajaxSubmitButton">Ajax 提交数据</button>
+            <button id="ajaxSubmitButton2">Ajax 2</button>
+            <div id="results"></div>
+        </div>
+    </div>
+    <div id='gridWrapper' class="row">
+        <div id='gridNode' class="col-lg-6">
+            <button id='editGridButton'>Edit</button>
+        </div>
+        <div id="contentForm" class="col-lg-5" role="form">
+            <table class="normal">
+                <tr>
+                    <td><label for="name">Name: </label></td>
+                    <td>
+                        <input type="text" id="name" name="name" required="true" placeholder="Name"
+                               data-dojo-type="dijit/form/ValidationTextBox"/>
+                    </td>
+                </tr>
+                <tr>
+                    <td><label for="score">Score: </label></td>
+                    <td><input type="text" id="score" name="score"
+                               data-dojo-type="dijit/form/NumberTextBox"></td>
+                </tr>
+            </table>
+            <button id="edit_add_button">add</button>
+        </div>
+    </div>
+</div>
+<script src="script.js"></script>
+</body>
+</html>

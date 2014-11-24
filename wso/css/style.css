@@ -11,7 +11,7 @@ html, body {
 }
 
 #navigator {
-    background: rgba(255,255,255, 0.9);
+    background: rgba(255, 255, 255, 0.9);
     border-radius: 7px 0 0;
     box-shadow: rgba(0, 0, 0, 0.2) 0px 0px 7px 0px;
     border: 0;
@@ -25,6 +25,13 @@ html, body {
 #status {
     border: 0;
     background: yellow;
+}
+
+.part {
+    background: rgba(255, 255, 255, 0.9);
+    padding: 0;
+    margin: 0;
+    border: 0;
 }
 
 .test1 {

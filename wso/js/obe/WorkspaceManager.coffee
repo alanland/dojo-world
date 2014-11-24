@@ -8,12 +8,12 @@ define [
   nullObjectValue = {type: 0, oid: 0, form: null}
   declare null,
     currentObject: null
-    usetab: true
+    usetab: false
     tabContainer: null
     constructor: ->
       @currentObject = nullObjectValue
-      #            topic.subscribe 'focusNavNode', lang.hitch(this, @_showObject)
-      topic.subscribe 'focusNavNode', lang.hitch @, @_showObject
+#      topic.subscribe 'focusNavNode', lang.hitch @, @_showObject
+      topic.subscribe 'clickNavNode', lang.hitch @, @_showObject
 
     getWsoByType: (item)->
       # item: navigator item
@@ -25,7 +25,7 @@ define [
           results.push child
       results
 
-    _showObject: (store, item)->
+    _showObject: (item)->
       # todo store 什么时候穿寄来的，还没有使用
       type = item['tid'] # the wosDefinition type
       oid = item['oid'] # the object id

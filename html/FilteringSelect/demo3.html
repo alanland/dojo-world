@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html >
+<head>
+
+    <link rel="stylesheet" href="../../lib/dojo-release-1.9.1-src/dijit/themes/claro/claro.css">
+
+    <script>dojoConfig = {async: true, parseOnLoad: true}</script>
+    <script src='../../lib/dojo-release-1.9.1-src/dojo/dojo.js'></script>
+
+    <script>
+        require(["dojo/parser", "dijit/form/FilteringSelect", "dojo/store/Memory"]);
+    </script>
+</head>
+<body class="claro">
+<div data-dojo-type="dojo/store/Memory"
+     data-dojo-id="stateStore"
+     data-dojo-props="data: [{id: 'y', name: 'yes'}, {id: 'n', name: 'no'}]"></div>
+<input data-dojo-type="dijit/form/FilteringSelect"
+       value="y"
+       data-dojo-props="store:stateStore, searchAttr:'name'"
+       name="state"
+       id="stateInput" />
+</body>
+</html>

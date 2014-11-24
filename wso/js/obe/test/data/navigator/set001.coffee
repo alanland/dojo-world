@@ -6,12 +6,14 @@ define ->
     demographics: 2
   }
   [
-    {id: 'root', name: 'root', type: type.root, tid: 'obe/test/data/wsoDefinitions/Login', oid: oid++},
-    {id: '1', name: 'Login', type: type.demographics, tid: 'obe/test/data/wsoDefinitions/Login', oid: oid++, parent: 'root'},
-    {id: '2', name: 'Users', type: type.demographics, tid: 'obe/test/data/wsoDefinitions/GridUser', oid: oid++, parent: 'root'},
-    {id: '3', name: 'Report', type: type.demographics, tid: 'obe/test/data/wsoDefinitions/Report', oid: oid++, parent: 'root'},
-    {id: '4', name: '工具栏', type: type.demographics, tid: 'obe/test/data/wsoDefinitions/Toolbar', oid: oid++, parent: 'root'},
-    {id: '5', name: 'Json', type: type.demographics, tid: 'obe/test/data/wsoDefinitions/json/Login.json', oid: oid++, parent: 'root'},
+    {id: 'root', name: 'root', type: type.root, tid: 0, oid: oid++},
+    {id: 'Def', name: '定义测试', type: type.folder, tid: 0, oid: oid++, parent: 'root'},
+    {id: oid++, name: 'Login', type: type.demographics, tid: 'obe/test/data/wsoDefinitions/Login', oid: oid++, parent: 'Def'},
+    {id: oid++, name: 'Users', type: type.demographics, tid: 'obe/test/data/wsoDefinitions/GridUser', oid: oid++, parent: 'Def'},
+    {id: oid++, name: 'Report', type: type.demographics, tid: 'obe/test/data/wsoDefinitions/Report', oid: oid++, parent: 'Def'},
+    {id: oid++, name: '工具栏', type: type.demographics, tid: 'obe/test/data/wsoDefinitions/Toolbar', oid: oid++, parent: 'Def'},
+    {id: oid++, name: 'Json', type: type.demographics, tid: 'obe/test/data/wsoDefinitions/json/Login.json', oid: oid++, parent: 'Def'},
+    {id: oid++, name: 'Lookup', type: type.demographics, tid: 'obe/test/data/wsoDefinitions/Lookup', oid: oid++, parent: 'root'},
     {id: 'Investigators', name: '3 Investigators', type: type.folder, tid: 3, oid: oid++, parent: 'root'},
     {id: 'Braker', name: '4 Braker', type: type.folder, tid: 4, oid: oid++, parent: 'root'},
     {id: 'Harris', name: 'Harris', type: type.folder, oid: oid++, parent: 'root'},

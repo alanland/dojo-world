@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title></title>
+    <link rel="stylesheet" href="http://localhost/www/dojo/bootstrap-3.1.1-dist/css/bootstrap.css">
+    <link rel="stylesheet" href="http://localhost/www/dojo/dijit/themes/claro/claro.css">
+    <link rel="stylesheet" href="http://localhost/www/dojo/gridx/tests/support/common.css">
+    <link rel="stylesheet" href="style.css">
+    <script>
+        contextPath = location.pathname.substring(0, location.pathname.lastIndexOf('/'));
+        dojoConfig = {
+            async: true,
+            parseOnLoad: true,
+            packages: [
+                {name: "app", location: contextPath + "/js/app"}
+            ]
+        };
+    </script>
+    <!--<script data-dojo-config="async: 1,parseOnLoad: true"
+                src="//ajax.googleapis.com/ajax/libs/dojo/1.8.5/dojo/dojo.js"></script>-->
+    <script src="http://localhost/www/dojo/dojo/dojo.js"></script>
+    <script>
+        require(["app/app", "dojo/domReady!"], function (demoApp) {
+            demoApp.init();
+        });
+    </script>
+</head>
+<body class="claro">
+<div class="row">
+    <select id="stateSelect1" data-dojo-type="dijit/form/Select"
+            name="stateSelect1">
+        <option value="" selected="selected">Select a state1</option>
+        <option value="AL">Alabama</option>
+        <option value="AK">Alaska</option>
+        <option value="AZ">Arizona</option>
+        <option value="AR">Arkansas</option>
+        <option value="CA">California</option>
+    </select>
+    <select id="stateSelect2" name="stateSelect" data-dojo-type="dijit/form/FilteringSelect"
+            data-dojo-props="
+            value: '',
+            placeHolder: 'Select a State'">
+        <option value="AL">Alabama</option>
+        <option value="AK">Alaska</option>
+        <option value="AZ">Arizona</option>
+        <option value="AR">Arkansas</option>
+        <option value="CA">California</option>
+    </select>
+    <select id="stateSelect3" name="stateSelect" data-dojo-type="dijit/form/FilteringSelect"
+            data-dojo-props="
+            required: false,
+            value: '',
+            placeHolder: 'Select a State'">
+        <option value="AL">Alabama</option>
+        <option value="AK">Alaska</option>
+        <option value="AZ">Arizona</option>
+        <option value="AR">Arkansas</option>
+        <option value="CA">California</option>
+    </select>
+    <select id="stateSelect4" name="stateSelect" data-dojo-type="dijit/form/ComboBox"
+            data-dojo-props="
+            value: '',
+            placeHolder: 'Select a State'">
+        <option value="AL">Alabama</option>
+        <option value="AK">Alaska</option>
+        <option value="AZ">Arizona</option>
+        <option value="AR">Arkansas</option>
+        <option value="CA">California</option>
+    </select>
+</div>
+<div class="row">
+    <div id="stateSelect21"></div>
+    <div id="stateSelect21_value"></div>
+    <div id="stateSelect21_displayedValue"></div>
+</div>
+<div class="row">
+    <div id="stateSelect22"></div>
+    <div id="stateSelect22_value"></div>
+    <div id="stateSelect22_displayedValue"></div>
+</div>
+<div class="row">
+    <div id="stateSelect23"></div>
+    <div id="stateSelect23_value"></div>
+</div>
+<div class="row">
+    <div id="stateSelect31"></div>
+    <div id="stateSelect31_value"></div>
+    <div id="stateSelect31_displayedValue"></div>
+</div>
+</body>
+</html>

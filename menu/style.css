@@ -1,0 +1,34 @@
+/*
+begin bootstrap hacks
+*/
+/*字体变小的问题*/
+html {
+    font-size: 100%;
+}
+
+/*table的border-collapse(collapse)*/
+table.normal {
+    border-spacing: 5px;
+    border-collapse: separate;
+}
+
+/*gridx表格最后一列多出来一块 bootstrap: border-box*/
+* {
+    -webkit-box-sizing: content-box;
+    -moz-box-sizing: content-box;
+    box-sizing: content-box;
+}
+
+/*end bootstrap hacks*/
+
+.taskIcon {
+    background: url("./icons/commonIconsObjActEnabled.png");
+    width: 24px;
+    height: 24px;
+}
+
+.row {
+    margin: 20px;
+    padding: 10px;
+    border: solid 1px cornflowerblue;
+}

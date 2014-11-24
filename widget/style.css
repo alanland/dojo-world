@@ -1,0 +1,16 @@
+div.row {
+    margin:20px 0;
+    padding: 10px;
+    background: #aaaaff;
+}
+
+.businessCard {
+    border: 3px inset gray;
+    margin: 1em;
+}
+.employeeName {
+    color: blue;
+}
+.specialEmployeeName {
+    color: red;
+}

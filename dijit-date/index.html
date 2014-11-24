@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="http://localhost/www/dojo/bootstrap-3.1.1-dist/css/bootstrap.css">
+
+    <link rel="stylesheet" href="http://localhost/www/dojo/dijit/themes/claro/claro.css">
+    <link rel="stylesheet" href="http://localhost/www/dojo/gridx/tests/support/common.css">
+    <link rel="stylesheet" href="style.css">
+    <script>dojoConfig = {parseOnLoad: true}</script>
+    <!--<script data-dojo-config="async: 1,parseOnLoad: true"
+                src="//ajax.googleapis.com/ajax/libs/dojo/1.8.5/dojo/dojo.js"></script>-->
+    <script data-dojo-config="async: true, parseOnLoad: true"
+            src="http://localhost/www/dojo/dojo/dojo.js"></script>
+
+    <meta name="description" content="DojoGrid Add Row"/>
+    <meta charset=utf-8/>
+    <title>JS Bin</title>
+</head>
+<body class="claro">
+<script>
+    require([
+        "dojo/parser", "dijit/form/Form",
+        "dijit/form/Button",
+        "dijit/form/ValidationTextBox",
+        "dijit/form/DateTextBox",
+        "dijit/form/NumberTextBox"
+    ]);
+</script>
+<div class="container">
+    <div id="timeTextBox1"></div>
+    <div id="MyDateTextBox"></div>
+    <!--<div id="timeTextBox1"></div>-->
+    <div id="MyTimestampTextBox"></div>
+    <div id="button">SetValue</div>
+    <div id="button1">GetValue</div>
+</div>
+<script src="script.js"></script>
+</body>
+</html>

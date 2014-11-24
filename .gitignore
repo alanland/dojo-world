@@ -12,3 +12,9 @@ dojo
 #wso/js/baf/*.js
 wso/**/*.js
 wso/**/*.map
+template/**/*.js
+template/**/*.map
+mvc/**/*.js
+mvc/**/*.map
+**/*.js
+**/*.map

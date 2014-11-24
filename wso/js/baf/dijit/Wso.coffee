@@ -10,6 +10,7 @@ define [
   'dojo/query'
   'dojo/on'
   'dojo/aspect'
+  'dijit/registry'
   'dijit/form/Form',
   'dijit/_Container'
   'dojox/mvc/at'
@@ -17,13 +18,14 @@ define [
   'dojox/mvc/ModelRefController'
   'baf/util'# todo
 ], (declare, lang, fx, dom, domClass, domStyle, domConstruct, domGeometry, query, onn, aspect, #
-    Form, _Container, #
+    registry, Form, _Container, #
     at, getStateful, ModelRefController, #
     WsoDefUtil) ->
   wsoItemType =
     html: 'html'
     panel: 'panel'
-    widget: 'widget'
+    widget: 'widget' # 使用 addChild 添加
+    domWidget: 'domWidget' # 使用 domConstruct 添加
     actions: 'actions'
     action: 'action'
   wsoItemDefault =
@@ -37,6 +39,9 @@ define [
       cols: 0
       children: []
       dom: {}
+    domWidget:
+      key: undefined
+      widgetArgs: {}
     widget:
       key: undefined
       widgetArgs: {}
@@ -204,11 +209,14 @@ define [
             curWsoNode = @addPanel WsoDefUtil.setDefaults(v, wsoItemDefault.panel), refNode
           when wsoItemType.widget
             curWsoNode = @addWidget WsoDefUtil.setDefaults(v, wsoItemDefault.widget), refNode
+          when wsoItemType.domWidget
+            curWsoNode = @addDomWidget WsoDefUtil.setDefaults(v, wsoItemDefault.widget), refNode
           else
             throw new Error('xxx')
         if v.children and v.children.length > 0
           for w in v.children
             @addWsoItemDef w, curWsoNode # todo 指定添加方案，现在无法堆
+          registry.byNode(curWsoNode).startup()
 
     addHTML: (def, refNode)->
       node = domConstruct.toDom def.html
@@ -223,6 +231,18 @@ define [
       @addFields def.fields, node if def.fields
       node
     addWidget: (def, refNode)->
+      parentWidget = registry.byNode refNode
+      wso = this
+      wsoItems = @wsoItems
+      curWsoItem = null
+      require async: false, [def.type], (ctor)->
+        curWsoItem = child = new ctor(lang.mixin def.widgetArgs, wso: wso)
+        parentWidget.addChild child
+#        domConstruct.place child.domNode, refNode
+        wsoItems[def.key] = child if def.key
+      curWsoItem.containerNode || curWsoItem.domNode
+
+    addDomWidget: (def, refNode)->
       wso = this
       wsoItems = @wsoItems
       curWsoItem = null

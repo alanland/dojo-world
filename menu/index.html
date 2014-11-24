@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <title></title>
+    <link rel="stylesheet" href="http://localhost/www/dojo/bootstrap-3.1.1-dist/css/bootstrap.css">
+    <link rel="stylesheet" href="http://localhost/www/dojo/dijit/themes/claro/claro.css">
+    <link rel="stylesheet" href="http://localhost/www/dojo/gridx/tests/support/common.css">
+    <link rel="stylesheet" href="style.css">
+    <script>
+        contextPath = location.pathname.substring(0, location.pathname.lastIndexOf('/'));
+        dojoConfig = {
+            async: true,
+            parseOnLoad: true,
+            packages: [
+                {name: "app", location: contextPath + "/js/app"}
+            ]
+        };
+    </script>
+    <!--<script data-dojo-config="async: 1,parseOnLoad: true"
+                src="//ajax.googleapis.com/ajax/libs/dojo/1.8.5/dojo/dojo.js"></script>-->
+    <script src="http://localhost/www/dojo/dojo/dojo.js"></script>
+    <script>
+        require(["app/app", "dojo/domReady!"], function (demoApp) {
+            demoApp.init();
+        });
+    </script>
+</head>
+<body class="claro">
+<div class="container">
+    <div class="row">
+        <div class="col-xs-4">
+            declarative
+            <div id="mainMenu" data-dojo-type="dijit/Menu">
+                <div id="edit" data-dojo-type="dijit/MenuItem">Edit</div>
+                <div id="view" data-dojo-type="dijit/MenuItem">View</div>
+                <div id="task" data-dojo-type="dijit/MenuItem">Task</div>
+            </div>
+        </div>
+        <div class="col-xs-4">
+            programmatic
+            <div id="mainMenu2"></div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-xs-4">
+            <div id="mainMenu3" data-dojo-type="dijit/Menu">
+                <div id="edit3" data-dojo-type="dijit/MenuItem">Edit</div>
+                <div id="view3" data-dojo-type="dijit/MenuItem">View</div>
+                <div id="task3" data-dojo-type="dijit/PopupMenuItem">
+                    <span>Task</span>
+
+                    <div id="taskMenu3" data-dojo-type="dijit/Menu">
+                        <div id="complete" data-dojo-type="dijit/MenuItem"
+                             data-dojo-props="iconClass: 'taskIcon'">
+                            Mark as Complete
+                        </div>
+                        <div id="cancel3" data-dojo-type="dijit/MenuItem">
+                            Cancel
+                        </div>
+                        <div id="begin3" data-dojo-type="dijit/MenuItem">
+                            Begin
+                        </div>
+                    </div>
+                </div>
+                <!-- end of sub-menu -->
+            </div>
+        </div>
+        <div class="col-xs-4">
+            <div id="mainMenu4"></div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-xs-4">
+            整个窗口的右键菜单
+            <div id="task5">
+            </div>
+        </div>
+        <div clas="col-xs-4">
+            <div id="task6"></div>
+        </div>
+    </div>
+    <div class="row">右键contextMenuForWindow</div>
+    <div class="row">
+        <div class="col-xs-4">
+            <div id="mainMenu9" data-dojo-type="dijit/MenuBar">
+                <div id="edit9" data-dojo-type="dijit/MenuBarItem">Edit</div>
+                <div id="view9" data-dojo-type="dijit/MenuBarItem">View</div>
+                <div id="task9" data-dojo-type="dijit/PopupMenuBarItem">
+                    <span>Task</span>
+
+                    <div id="taskMenu9" data-dojo-type="dijit/Menu">
+                        <div id="complete9" data-dojo-type="dijit/MenuItem">
+                            Mark as Complete
+                        </div>
+                        <div id="cancel9" data-dojo-type="dijit/MenuItem">
+                            Cancel
+                        </div>
+                        <div id="begin9" data-dojo-type="dijit/MenuItem">
+                            Begin
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xs-4">
+            <div id="mainMenu10"></div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-xs-4">
+            <div id="comboButton11" data-dojo-type="dijit/form/ComboButton">
+                <span>Do Something</span>
+                <div data-dojo-type="dijit/Menu">
+                    <div data-dojo-type="dijit/MenuItem">Edit</div>
+                    <div data-dojo-type="dijit/MenuItem">View</div>
+                    <div data-dojo-type="dijit/MenuItem">Task</div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xs-4">
+            <div id="comboBtn12"></div>
+        </div>
+    </div>
+    <div class="row">
+        <span id="progmenu">Right click me to get a menu</span>
+    </div>
+</body>
+</html>

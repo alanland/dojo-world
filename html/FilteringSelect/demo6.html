@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html >
+<head>
+
+    <link rel="stylesheet" href="../../lib/dojo-release-1.9.1-src/dijit/themes/claro/claro.css">
+
+    <script>dojoConfig = {async: true, parseOnLoad: false}</script>
+    <script src='../../lib/dojo-release-1.9.1-src/dojo/dojo.js'></script>
+
+    <script>
+        require([
+            "dojo/dom", "dojo/store/Memory", "dijit/form/FilteringSelect",
+            "dojo/domReady!"
+        ], function(dom, Memory, FilteringSelect){
+            var dojoStore = new Memory({data: [
+                {id: 1, name:"we", label:"<i>we</i> <img src='http://placekitten.com/50/70' />"},
+                {id: 2, name:"are", label:"<u>are</u> <img src='http://placekitten.com/50/60' />"},
+                {id: 3, name:"kittens", label:"<b>kittens</b> <img src='http://placekitten.com/50/50' />"}
+            ]});
+
+            var fs = new FilteringSelect({
+                id: "dojoBox",
+                value: 3,
+                store: dojoStore,
+                searchAttr: "name",
+                name: "xyz",
+                labelAttr: "label",
+                labelType: "html"
+            }, dom.byId("dojoBox")).startup();
+        });
+    </script>
+</head>
+<body class="claro">
+<input id="dojoBox" />
+</body>
+</html>

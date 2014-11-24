@@ -1,0 +1,24 @@
+<script data-dojo-config="async: true, parseOnLoad: true,baseUrl: './', modulePaths: { app: 'app' }"
+            src="http://localhost/www/dojo/dojo/dojo.js"></script>
+
+上面两个属性一起使用的时候，可以加载，所有的模块都会从 baseUrl 开始加载
+
+----------------------------------------------------------------------------
+    <script>
+        dojoConfig = {
+            async: true,
+            parseOnLoad: true,
+            packages: [
+                {
+                    name: "app",
+                    location: "/workspace/dojo/spa/app"
+                }
+            ]}
+    </script>
+    这样，packages中的location使用web服务器的绝对路径，
+    不是以/开头，无论是 app/foo 或者  ./app/foo 那么都会使用 dojo.js 所在的路径开始计算
+
+----------------------------------------------------------------------------
+使用下面方法获得当前文件夹路径，然后拼接上根据党建文件的相对路径
+location.pathname.substring(0,location.pathname.lastIndexOf('/'))
+----------------------------------------------------------------------------

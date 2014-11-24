@@ -155,4 +155,3 @@ define [
           domConstruct.place(widget.domNode, this._minor, "last");
         if @_started and not widget._started
           widget.startup()
-          

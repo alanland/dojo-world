@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title></title>
+    <link rel="stylesheet" href="http://localhost/www/dojo/dijit/themes/claro/claro.css">
+    <link rel="stylesheet" href="style.css">
+    <script>
+        contextPath = location.pathname.substring(0, location.pathname.lastIndexOf('/'));
+        dojoConfig = {
+            async: true,
+            isDebug: true,
+            parseOnLoad: true,
+            packages: [
+                {name: "demo", location: contextPath + "/js/demo"}
+            ],
+            flickrRequest: {
+                apikey: "YOURAPIKEYHERE",
+                sort: [
+                    {
+                        attribute: 'datetaken',
+                        descending: true
+                    }
+                ]
+            }
+        };
+    </script>
+    <script>
+        var dojoConfig = (function () {
+            var base = location.href.split("/");
+            base.pop();
+            base = base.join("/");
+
+            return {
+                async: true,
+                isDebug: true,
+                parseOnLoad: true,
+                packages: [
+                    {
+                        name: "demo",
+                        location: base + "/js/demo"
+                    }
+                ],
+                flickrRequest: {
+                    apikey: "8c6803164dbc395fb7131c9d54843627",
+                    sort: [
+                        {
+                            attribute: "datetaken",
+                            descending: true
+                        }
+                    ]
+                }
+            };
+        })();
+    </script>
+    <!--<script data-dojo-config="async: 1,parseOnLoad: true"
+                src="//ajax.googleapis.com/ajax/libs/dojo/1.8.5/dojo/dojo.js"></script>-->
+    <script src="http://localhost/www/dojo/dojo/dojo.js"></script>
+    <script>
+        require(["demo/app", "dojo/domReady!"], function (demoApp) {
+            demoApp.init();
+        });
+    </script>
+</head>
+<body class="claro">
+<!-- overlay -->
+<div id="loadingOverlay" class="pageOverlay">
+    <div class="loadingMessage">Loading...</div>
+</div>
+
+<!-- application -->
+<div id="appLayout" class="demoLayout" data-dojo-type="dijit/layout/BorderContainer"
+     data-dojo-props="design: 'headline'">
+    <div class="centerPanel" id="tabs" data-dojo-type="dijit/layout/TabContainer"
+         data-dojo-props="region: 'center', tabPosition: 'bottom'">
+        <div data-dojo-type="dijit/layout/ContentPane" data-dojo-props="title: 'About'">
+            <h2>Flickr keyword photo search</h2>
+
+            <p>Each search creates a new tab with the results as thumbnails</p>
+
+            <p>Click on any thumbnail to view the larger image</p>
+        </div>
+    </div>
+    <div class="edgePanel" data-dojo-type="dijit/layout/ContentPane" data-dojo-props="region: 'top'">
+        <div class="searchInputColumn">
+            <div class="searchInputColumnInner">
+                <input id="searchTerms" placeholder="search terms">
+            </div>
+        </div>
+        <div class="searchButtonColumn">
+            <button id="searchBtn">Search</button>
+        </div>
+    </div>
+</div>
+</body>
+</html>

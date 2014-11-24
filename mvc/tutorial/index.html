@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title></title>
+    <link rel="stylesheet" href="http://localhost/www/dojo/dijit/themes/claro/claro.css" media="screen">
+    <link rel="stylesheet" href="css/main.css" media="screen">
+</head>
+<body class="claro">
+<script>
+    contextPath = location.pathname.substring(0, location.pathname.lastIndexOf('/'));
+    dojoConfig = {
+        async: true,
+        parseOnLoad: true,
+        packages: [
+            {name: "app", location: contextPath + "/js/app"}
+        ]
+    };
+</script>
+<script src="http://localhost/www/dojo/dojo/dojo.js"></script>
+<script>
+    require(['app/main'], function (main) {
+        main.startup({});
+    });
+</script>
+<a href="http://dojotoolkit.org/documentation/tutorials/1.10/data_modeling/">http://dojotoolkit.org/documentation/tutorials/1.10/data_modeling/</a>
+
+<form id="form">
+    <div>Name:
+        <input type="text" name="name"/>
+    </div>
+    <div>Quantity:
+        <input type="text" name="quantity"/>
+    </div>
+    <div>Category:
+        <input type="text" name="category"/>
+    </div>
+</form>
+<button id="sell">Sell One</button>
+<button id="save">Save</button>
+
+<h2>Other Actions</h2>
+<button id="add">Add Shoes</button>
+<button id="put-negative">Put Negative Quantity (should cause validation error)</button>
+
+<div id="container"></div>
+</body>
+</html>
