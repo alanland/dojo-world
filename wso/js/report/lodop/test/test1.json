@@ -1,0 +1,18 @@
+{
+  "taskName": "打印控件功能演示_Lodop功能_名片js",
+  "style": {
+    "FontSize": 18,
+    "Bold": 1
+  },
+  "pageSize": [1,1380,880,""],
+  "children": [
+    {
+      "type": "rect",
+      "args": [10,55,360,220,0,1]
+    },
+    {
+      "type":"text",
+      "args":[20,180,100,25,"郭德强"]
+    }
+  ]
+}

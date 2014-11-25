@@ -1,0 +1,60 @@
+{
+  "taskName": "打印任务的名称",
+  "preview": 0,
+  "copies": 1,
+  "pageCount": 1,
+  "pageSize": [orient,width,height,name],
+  "printMode": {
+    "DOUBLE_SIDED_PRINT": "",
+    "PRINT_START_PAGE": "",
+    "PRINT_END_PAGE": "",
+    "PRINT_PAGE_PERCENT": "",
+    "AUTO_CLOSE_PREWINDOW": "",
+    "PRINT_SETUP_PROGRAM": "",
+    "NOCLEAR_AFTER_PRINT": "",
+    "CATCH_PRINT_STATUS": "",
+    "POS_BASEON_PAPER": "",
+    "CUSTOM_TASK_NAME": "",
+    "PROGRAM_VARNAME": "",
+    "PROGRAM_ROOTDIR": "",
+    "WINDOW_DEFPRINTER": "",
+    "WINDOW_DEFPAGESIZE": "",
+    "RESELECT_PRINTER": "",
+    "RESELECT_PAGESIZE": "",
+    "RESELECT_ORIENT": "",
+    "RESELECT_COPIES": "",
+    "CONTROL_PRINTER": ""
+  },
+  "style": {
+    "FontSize": 18,
+    "Bold": 1
+  },
+  "children": [
+    {
+      "type": "text",
+      "args":[top,left,width,height,content],
+      "style": {
+        "FontSize": 18,
+        "Bold": 1
+      }
+    },
+    {
+      "type": "html",
+      "args":[top,left,width,height,style,content]
+//      "style": "<style>table,td { border: 1 solid #000000;border-collapse:collapse }</style>",
+//      "content": "<table></table>"
+    },
+    {
+      "type": "table",
+      "args":[top,left,width,height,content]
+    },
+    {
+      "type": "shape",
+      "args":[top,left,width,height,content,lineStyle,lineWidth,lineColor]
+    },
+    {
+      "type": "barcode",
+      "args":[top,left,width,height,type,value]
+    }
+  ]
+}

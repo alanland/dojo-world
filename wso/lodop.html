@@ -3,8 +3,59 @@
 <head lang="en">
     <meta charset="UTF-8">
     <title></title>
+    <link rel="stylesheet" href="/www/dojo/dijit/themes/claro/claro.css" media="screen">
+    <link rel="stylesheet" href="css/style.css" media="screen">
 </head>
-<body>
+<body class="claro">
 
+<button id="btn"></button>
+<button id="btn2"></button>
+
+<script>
+    contextPath = location.pathname.substring(0, location.pathname.lastIndexOf('/'));
+    dojoConfig = {
+        async: true,
+        parseOnLoad: true,
+        packages: [
+            {name: "baf", location: contextPath + "/js/baf"},
+            {name: "obe", location: contextPath + "/js/obe"},
+            {name: "report", location: contextPath + "/js/report"},
+            {name: "lib", location: contextPath + "/js/lib"}
+        ]
+    };
+</script>
+<script src="/www/dojo/dojo/dojo.js"></script>
+<!--<script src="../dojo/dojo/dojo.js"></script>-->
+<script>
+    require([
+        'lib/LodopFuncs',
+        'report/lodop/lodop',
+        'dijit/form/Button',
+        'dojo/request',
+        'dojo/domReady!'
+    ], function (LodopFuncs, lodop, Button, request) {
+        var width = 1380, height = 880;
+        var btnPreview = new Button({
+            label: "预览",
+            onClick: function () {
+                request('js/report/lodop/test/test1.json', {
+                    handleAs: 'json'
+                }).then(function (data) {
+                    console.log(data);
+                    LODOP = lodop.getLodopPrint(data);
+                    LODOP.PREVIEW();
+                    //LODOP.PRINT_SETUP();
+                });
+            }
+        }, "btn");
+        var btn = new Button({
+            label: '设计',
+            onClick: function () {
+                initPrint();
+                LODOP.PRINT_SETUP();
+            }
+        }, 'btn2');
+    });
+</script>
 </body>
 </html>
