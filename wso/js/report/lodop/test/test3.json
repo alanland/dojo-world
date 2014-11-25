@@ -1,0 +1,87 @@
+{
+  "taskName": "打印任务的名称",
+  "preview": 0,
+  "copies": 1,
+  "pageCount": 1,
+  "pageSize": {
+    "orient": 0,
+    "width": 800,
+    "height": 800,
+    "name": "A4"
+  },
+  "printMode": {
+    "DOUBLE_SIDED_PRINT": "",
+    "PRINT_START_PAGE": "",
+    "PRINT_END_PAGE": "",
+    "PRINT_PAGE_PERCENT": "",
+    "AUTO_CLOSE_PREWINDOW": "",
+    "PRINT_SETUP_PROGRAM": "",
+    "NOCLEAR_AFTER_PRINT": "",
+    "CATCH_PRINT_STATUS": "",
+    "POS_BASEON_PAPER": "",
+    "CUSTOM_TASK_NAME": "",
+    "PROGRAM_VARNAME": "",
+    "PROGRAM_ROOTDIR": "",
+    "WINDOW_DEFPRINTER": "",
+    "WINDOW_DEFPAGESIZE": "",
+    "RESELECT_PRINTER": "",
+    "RESELECT_PAGESIZE": "",
+    "RESELECT_ORIENT": "",
+    "RESELECT_COPIES": "",
+    "CONTROL_PRINTER": ""
+  },
+  "style": {
+    "FontSize": 18,
+    "Bold": 1
+  },
+  "children": [
+    {
+      "type": "text",
+      "top": 100,
+      "left": 100,
+      "width": 100,
+      "height": 100,
+      "content": "文本内容",
+      "style": {
+        "FontSize": 18,
+        "Bold": 1
+      }
+    },
+    {
+      "type": "html",
+      "top": 100,
+      "left": 100,
+      "width": 100,
+      "height": 100,
+      "style": "<style>table,td { border: 1 solid #000000;border-collapse:collapse }</style>",
+      "content": "<table></table>"
+    },
+    {
+      "type": "table",
+      "top": 100,
+      "left": 100,
+      "width": 100,
+      "height": 100,
+      "content": "文本内容"
+    },
+    {
+      "type": "shape",
+      "top": 100,
+      "left": 100,
+      "width": 100,
+      "height": 100,
+      "lineStyle": 1,
+      "lineWidth": 1,
+      "lineColor": 1
+    },
+    {
+      "type": "barcode",
+      "top": 100,
+      "left": 100,
+      "width": 100,
+      "height": 100,
+      "type": "Code39",
+      "value": "1456789"
+    }
+  ]
+}
