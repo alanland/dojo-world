@@ -1,0 +1,16 @@
+{
+  "queryFields":{
+    "departmentNo": ["string", "用户编码"],
+    "username": ["string", "用户名"],
+    "department": ["string", "部门"]
+  },
+  "listStructure":[
+    {"id": "order", "field": "order", "name": "Order", "width": "30px"},
+    {"id": "id", "field": "id", "name": "ID", "width": "30px"},
+    {"id": "name", "field": "name", "name": "Name", "width": "50px"},
+    {"id": "city", "field": "city", "name": "City"},
+    {"id": "score", "field": "score", "name": "Score", "width": "80px"}
+  ],
+  "detailFields":{
+  }
+}
