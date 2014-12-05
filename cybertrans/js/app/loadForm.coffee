@@ -3,6 +3,7 @@ define [
     'dojo/_base/lang',
     'dojo/dom-construct',
     'dojo/aspect',
+    'dojo/request',
     'dijit/layout/BorderContainer',
     'dijit/layout/TabContainer',
     'dijit/layout/ContentPane',
@@ -24,7 +25,7 @@ define [
     "gridx/support/Summary",
     "gridx/support/DropDownPager",
     "dojo/store/Memory"
-], (array, lang, domCons, aspect,
+], (array, lang, domCons, aspect,request,
     BorderContainer, TabContainer, ContentPane, Button, TextBox,
     Grid, Cache,
     VirtualVScroller, ColumnResizer, ExtendedSelectRow, ExtendedSelectColumn, RowHeader,
@@ -77,12 +78,31 @@ define [
                 "gridx/support/LinkSizer",
                 {pluginClass: "gridx/support/LinkPager", style: 'text-align: right;'}
             ]
+            onCellDblClick: (evt)->
+                item = @row(evt.rowIndex).item()
+                tc.selectChild(detail)
+                detail.destroyDescendants()
+                request('js/test/json/details.json', {handleAs: 'json'}).then(
+                    (data)->
+                        for key,value of data
+                            require [
+                                fieldTypeMapping[value[0]]
+                            ], (type)->
+                                domCons.create('label', {innerHTML: value[1]}, detail.domNode)
+                                field = new type()
+                                field.set 'value', item[key]
+                                detail.addChild(field)
+
+
+                            console.log value
+                )
+
         });
         gridContainer = domCons.create('div', {class: 'gridx'}, center.domNode)
         grid.placeAt(gridContainer);
         grid.startup();
 
-        center.ttx={listGrid:grid}
+        center.ttx = {listGrid: grid}
         window.g = grid;
 
         #
@@ -96,3 +116,4 @@ define [
             aspect.after grid.pagination, 'onSwitchPage', updateRowNo
             aspect.after grid.pagination, 'onChangePageSize', updateRowNo
             aspect.after grid.sort, 'sort', updateRowNo
+            updateRowNo()

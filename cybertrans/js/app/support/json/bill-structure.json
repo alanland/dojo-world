@@ -1,0 +1,34 @@
+{
+  "queryFields": [
+    {"id": "no", "type": "string", "field": "no", "name": "单号", "operator": "like"},
+    {"id": "owner", "type": "string", "field": "owner", "name": "货主", "operator": "equals"},
+    {"id": "count", "type": "number", "field": "count", "name": "总件数", "operator": "between"}
+  ],
+  "listActions": [],
+  "listStructure": [
+    {"id": "order", "field": "order", "name": "Order", "width": "30px"},
+    {"id": "id", "field": "id", "name": "ID", "width": "30px"},
+    {"id": "no", "field": "no", "name": "单号", "width": "100px"},
+    {"id": "owner", "field": "owner", "name": "货主"},
+    {"id": "count", "field": "count", "name": "总件数", "width": "80px"}
+  ],
+  "billStructure": {
+    "headerFields": [
+      {"id": "no", "type": "string", "field": "no", "name": "单号"},
+      {"id": "owner", "type": "string", "field": "owner", "name": "货主"},
+      {"id": "count", "type": "number", "field": "count", "name": "总件数"}
+    ],
+    "detailsStructure": [
+      {"id": "order", "field": "order", "name": "Order", "width": "30px"},
+      {"id": "id", "field": "id", "name": "ID", "width": "30px"},
+      {"id": "material", "field": "material", "name": "物料", "width": "50px"},
+      {"id": "spec", "field": "spec", "name": "规格"},
+      {"id": "qty", "field": "qty", "name": "数量", "width": "80px"}
+    ],
+    "detailEditFields": [
+      {"id": "material", "type": "string", "field": "material", "name": "物料"},
+      {"id": "owner", "type": "string", "field": "owner", "name": "规格"},
+      {"id": "count", "type": "number", "field": "count", "name": "数量"}
+    ]
+  }
+}

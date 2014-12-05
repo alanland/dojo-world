@@ -1,0 +1,5 @@
+{
+  "name":["string", "名称"],
+  "city":["string", "城市"],
+  "score":["string", "分数"]
+}
