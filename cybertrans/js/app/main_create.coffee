@@ -34,8 +34,24 @@ define [
             onChange: ->
                 item = @item
                 request(base_url + '/rest/' + item.id + '/queryFieldData', {handleAs: 'json'}).then(
-                    (data)->
-                        gridx1.setStore(new Memory data: data)
+                    (data)->  # 查询字段
+                        gridQueryProvide.setStore(new Memory data: data)
+                )
+                request(base_url + '/rest/' + item.id + '/listStructureData', {handleAs: 'json'}).then(
+                    (data)-> # 查询列表字段
+                        gridListProvide.setStore(new Memory data: data)
+                )
+                request(base_url + '/rest/' + item.id + '/headerFieldData', {handleAs: 'json'}).then(
+                    (data)-> # 单头字段
+                        gridHeaderProvide.setStore(new Memory data: data)
+                )
+                request(base_url + '/rest/' + item.id + '/lineStructureData', {handleAs: 'json'}).then(
+                    (data)-> # 明细列表字段
+                        gridLineProvide.setStore(new Memory data: data)
+                )
+                request(base_url + '/rest/' + item.id + '/lineFieldData', {handleAs: 'json'}).then(
+                    (data)-> # 明细编辑字段
+                        gridLineFieldProvide.setStore(new Memory data: data)
                 )
         });
         window.c = comboBox
@@ -72,7 +88,7 @@ define [
             g
 
         structure = [
-            {id: 'id', field: 'id', name: 'ID', width: '80px'},
+#            {id: 'id', field: 'id', name: 'ID', width: '80px'},
             {id: 'location', field: 'location', name: '表位置', width: '80px'},
             {id: 'name', field: 'name', name: 'Name', width: '100px'},
             {id: 'operator', field: 'operator', name: '操作符'}
@@ -85,26 +101,25 @@ define [
 #            {location: '明细', id: 'spec', field: 'spec', name: '规格', operator: 'lk', type: 'string'}
 #            {location: '明细', id: 'qty', field: 'qty', name: '数量', operator: 'eq', type: 'string'}
         ]
-        gridx1 = createGrid('grid1', 'grid1Container', grid1Store, structure, {
+        gridQueryProvide = createGrid('gridQueryProvide', 'grid1Container', new Memory(data: []), structure, {
             style: {width: '400px', height: '300px'},
             barTop: [{content: '<h1>查询条件 (可选) </h1>'}],
-            dndRowAccept: ['grid2/rows'],
-            dndRowProvide: ['grid1/rows']
+            dndRowAccept: ['gridQueryAccept/rows'],
+            dndRowProvide: ['gridQueryProvide/rows']
         });
-        grid2Store = new Memory(data: [])
-        window.s = grid2Store
-        gridx2 = createGrid('grid2', 'grid2Container', grid2Store, structure, {
+        gridQueryAccept = createGrid('gridQueryAccept', 'grid2Container', new Memory(data: []), structure, {
             style: {width: '400px', height: '300px'}, 4
             barTop: [{content: '<h1>查询条件 (已选) </h1>'}],
-            dndRowAccept: ['grid1/rows'],
-            dndRowProvide: ['grid2/rows']
+            dndRowAccept: ['gridQueryProvide/rows'],
+            dndRowProvide: ['gridQueryAccept/rows']
         })
 
+        # test button
         dojon prtButton, 'click', ->
             json = []
-            if gridx2.rowCount() > 0
-                for i in [0..gridx2.rowCount() - 1]
-                    json.push gridx2.row(i).item()
+            if gridQueryAccept.rowCount() > 0
+                for i in [0..gridQueryAccept.rowCount() - 1]
+                    json.push gridQueryAccept.row(i).item()
                 console.log json
                 console.log JSON.stringify(json)
 
@@ -114,21 +129,79 @@ define [
             {field: 'name', name: '名称', width: '80px'},
             {field: 'width', name: '宽度', width: '80px'}
         ]
-        grid3Store = new Memory data: [
-
-        ]
-        gridx3 = createGrid('grid3', 'grid3Container', grid3Store, structure, {
+        gridListProvide = createGrid('gridListProvide', 'grid3Container', new Memory(data: []), structure, {
             style: {width: '400px', height: '300px'},
             barTop: [{content: '<h1>列表字段 (可选) </h1>'}],
-            dndRowAccept: ['grid4/rows'],
-            dndRowProvide: ['grid3/rows']
+            dndRowAccept: ['gridListAccept/rows'],
+            dndRowProvide: ['gridListProvide/rows']
         })
-        gridx4 = createGrid('grid4', 'grid4Container', new Memory(data: []), structure, {
+        gridListAccept = createGrid('gridListAccept', 'grid4Container', new Memory(data: []), structure, {
             style: {width: '400px', height: '300px'},
             barTop: [{content: '<h1>列表字段 (已选) </h1>'}],
-            dndRowAccept: ['grid3/rows'],
-            dndRowProvide: ['grid4/rows']
+            dndRowAccept: ['gridListProvide/rows'],
+            dndRowProvide: ['gridListAccept/rows']
         })
+
+
+        # header field structure
+        structure = [
+            {field: 'field', name: '字段', width: '80px'},
+            {field: 'name', name: '名称', width: '80px'},
+            {field: 'type', name: '类型', width: '80px'}
+        ]
+        gridHeaderProvide = createGrid('gridHeaderProvide', 'grid5Container', new Memory(data: []), structure, {
+            style: {width: '400px', height: '300px'},
+            barTop: [{content: '<h1>单头字段 (可选) </h1>'}],
+            dndRowAccept: ['gridHeaderAccept/rows'],
+            dndRowProvide: ['gridHeaderProvide/rows']
+        })
+        gridHeaderAccept = createGrid('gridHeaderAccept', 'grid6Container', new Memory(data: []), structure, {
+            style: {width: '400px', height: '300px'},
+            barTop: [{content: '<h1>单头字段 (已选) </h1>'}],
+            dndRowAccept: ['gridHeaderProvide/rows'],
+            dndRowProvide: ['gridHeaderAccept/rows']
+        })
+
+
+        # line structure
+        structure = [
+            {field: 'field', name: '字段', width: '80px'},
+            {field: 'name', name: '名称', width: '80px'},
+            {field: 'type', name: '类型', width: '80px'}
+        ]
+        gridLineProvide = createGrid('gridLineProvide', 'grid7Container', new Memory(data: []), structure, {
+            style: {width: '400px', height: '300px'},
+            barTop: [{content: '<h1>明细字段 (可选) </h1>'}],
+            dndRowAccept: ['gridLineAccept/rows'],
+            dndRowProvide: ['gridLineProvide/rows']
+        })
+        gridLineAccept = createGrid('gridLineAccept', 'grid8Container', new Memory(data: []), structure, {
+            style: {width: '400px', height: '300px'},
+            barTop: [{content: '<h1>明细字段 (已选) </h1>'}],
+            dndRowAccept: ['gridLineProvide/rows'],
+            dndRowProvide: ['gridLineAccept/rows']
+        })
+
+
+        # line field structure
+        structure = [
+            {field: 'field', name: '字段', width: '80px'},
+            {field: 'name', name: '名称', width: '80px'},
+            {field: 'type', name: '类型', width: '80px'}
+        ]
+        gridLineFieldProvide = createGrid('gridLineFieldProvide', 'grid9Container', new Memory(data: []), structure, {
+            style: {width: '400px', height: '300px'},
+            barTop: [{content: '<h1>明细编辑字段 (可选) </h1>'}],
+            dndRowAccept: ['gridLineFieldAccept/rows'],
+            dndRowProvide: ['gridLineFieldProvide/rows']
+        })
+        gridLineFieldAccept = createGrid('gridLineFieldAccept', 'grid10Container', new Memory(data: []), structure, {
+            style: {width: '400px', height: '300px'},
+            barTop: [{content: '<h1>明细编辑字段 (已选) </h1>'}],
+            dndRowAccept: ['gridLineFieldProvide/rows'],
+            dndRowProvide: ['gridLineFieldAccept/rows']
+        })
+
 
 
 
