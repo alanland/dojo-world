@@ -57,7 +57,7 @@ define [
         window.c = comboBox
         cp.addChild(comboBox)
 
-        request(base_url + '/rest/creator/billMapping', {handleAs: 'json'}).then(
+        request(base_url + '/rest/creation/billMapping', {handleAs: 'json'}).then(
             (data)->
                 comboBox.store.setData(data)
         )
@@ -201,6 +201,41 @@ define [
             dndRowAccept: ['gridLineFieldProvide/rows'],
             dndRowProvide: ['gridLineFieldAccept/rows']
         })
+
+        getAcceptedData = (grid)->
+            json = []
+            if grid.rowCount > 0
+                for i in [0..gridQueryAccept.rowCount() - 1]
+                    json.push gridQueryAccept.row(i).item()
+                console.log json
+            json
+
+        createBtn = new Button({
+            label: '创建'
+            onClick: (e)->
+                result = {
+                    billKey: comboBox.get('value')
+                    queryFields: getAcceptedData(gridQueryAccept)
+                    listActions: []
+                    listStructure: getAcceptedData gridListAccept
+                    billStructure: {
+                        headerFields: getAcceptedData gridHeaderAccept
+                        detailsStructure: getAcceptedData(gridLineAccept)
+                        detailEditFields: getAcceptedData(gridLineFieldAccept)
+                    }
+                }
+                console.log(JSON.stringify(result))
+                request(base_url + '/rest/creation/create', {
+                    method: 'post'
+                    data: JSON.stringify(result)
+                    headers: {'Content-Type': 'application/json'}
+                }).then(
+                    (data)->
+                        console.log 'success'
+                    (err)->
+                        console.log 'error'
+                )
+        }, 'createBtn')
 
 
 

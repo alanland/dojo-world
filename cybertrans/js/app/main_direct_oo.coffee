@@ -21,6 +21,7 @@ define [
     Memory,
     TtxTabContainer, dataSource, storeFactory)->
     startup: (args)->
+        base_url = 'http://localhost:9000'
         billStructure = {}
         store = storeFactory {
             dataSource: dataSource,
@@ -37,7 +38,7 @@ define [
         tc.loadForm(billStructure, store)
         tc.startup()
 
-        request('js/app/support/json/bill-structure.json', {handleAs: 'json'}).then(
+        request(base_url + '/rest//queryFieldData', {handleAs: 'json'}).then(
             (data)->
                 tc.loadForm(data, store)
         )
