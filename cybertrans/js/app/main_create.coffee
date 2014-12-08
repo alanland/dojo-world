@@ -204,7 +204,7 @@ define [
 
         getAcceptedData = (grid)->
             json = []
-            if grid.rowCount > 0
+            if grid.rowCount() > 0
                 for i in [0..gridQueryAccept.rowCount() - 1]
                     json.push gridQueryAccept.row(i).item()
                 console.log json
@@ -214,7 +214,7 @@ define [
             label: '创建'
             onClick: (e)->
                 result = {
-                    billKey: comboBox.get('value')
+                    billKey: comboBox.item.id
                     queryFields: getAcceptedData(gridQueryAccept)
                     listActions: []
                     listStructure: getAcceptedData gridListAccept

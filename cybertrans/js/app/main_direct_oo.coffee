@@ -38,7 +38,7 @@ define [
         tc.loadForm(billStructure, store)
         tc.startup()
 
-        request(base_url + '/rest//queryFieldData', {handleAs: 'json'}).then(
+        request(base_url + '/rest/creation/billStructure/ship', {handleAs: 'json'}).then(
             (data)->
                 tc.loadForm(data, store)
         )

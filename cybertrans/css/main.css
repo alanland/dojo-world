@@ -1,6 +1,6 @@
 #left {
     /*background: #ff0000;*/
-    width:300px;
+    width: 300px;
 }
 
 #right {
@@ -8,8 +8,8 @@
 }
 
 #container {
-    width:100%;
-    height:100%;
+    width: 100%;
+    height: 100%;
 }
 
 .gridx {
@@ -17,6 +17,75 @@
     height: 400px;
 }
 
-body{
-    padding:30px;
+body {
+    padding: 40px 100px;
+}
+
+label {
+    display: inline-block;
+    width: 12%;
+    padding: 2px 5px 2px 20px;
+    text-align: right;
+}
+
+label.radioLabel {
+    display: inline;
+}
+
+.dijitTextBox {
+    width: 35%;
+    margin: 3px 0;
+}
+
+.radioDiv {
+    display: inline-block;
+    width: 30%;
+}
+
+h2 {
+    color: #6E8098;
+    font-size: 16px;
+    padding: 0 0 7px 5px;
+    margin: 20px 0 0 20px;
+    border-bottom: solid 1px #C5CCD3;
+}
+
+.toolbar {
+    text-align: right;
+    padding: 0 100px 10px 50px;
+    border-bottom: solid 1px #C5CCD3;
+    margin: 0 0 20px 0;
+}
+
+h1.inline-block {
+    font-size: 18px;
+    color: #265d98;
+    display: inline-block;
+    margin-left: 10px;
+}
+
+.gridx h1{
+    padding-left: 20px;
+}
+
+.dijitToolbar {
+    background: none !important;
+    border-bottom: none !important;
+    text-align: right;
+    margin-right: 100px;
+}
+
+#contentButtons {
+    width: 100%;
+    padding: 5px 0;
+    background: #DBEBFB;
+    margin-right: 20px;
+    -webkit-box-shadow: #EEE 4px 4px 3px;
+}
+
+#contentButtonsDiv {
+    display: inline-block;
+    position: relative;
+    right: -750px;
+    top: 0;
 }

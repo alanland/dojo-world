@@ -37,7 +37,6 @@ define [
         cpBill: null
         cpDetail: null
         billStructure: null
-        queryFields: {}
 
         listGrid: null
 
@@ -63,7 +62,7 @@ define [
             ss = @billStructure
             # query field
             #            @queryFieldsDom = domCons.create('div',@cpDetail.domNode)
-            fields = @queryFields
+            fields = ss.queryFields
             cpList = @cpList
 
             # 查询字段
