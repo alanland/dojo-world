@@ -284,7 +284,6 @@ define [
         loadBillForm = (data)->
             tc.selectChild cp2
             tc.set('ttxCurrentData', data)
-            console.log(data)
             editUserCode.focus()
             editUserCode.set 'value', data.us_usercode.trim()
             editUserName.set 'value', data.us_username.trim()
@@ -355,6 +354,8 @@ define [
             data.us_username = editUserName.get('value')
             data.us_usercode = editUserCode.get('value')
             data.us_department = editDepartment.get('value')
+            data.us_start_date = editStartDate.get('value')
+            data.us_end_date = editEndDate.get('value')
             data
 
         saveFormData = ()->
@@ -410,6 +411,9 @@ define [
 #                        cancelable: true
 #                    }
 
+        aspect.after tc, 'selectChild', ()->
+            editRole.focus()
+            editUserCode.focus()
 
 
 
