@@ -63,7 +63,7 @@ html, body {
     overflow: hidden;
     padding: 0;
     background: url(http://x.srcdd.com/farm1/80f946/b6ec31b5/03550.jpg) scroll;
-    background: url("//d2hkcehpyog59.cloudfront.net/backgrounds/566ab97d187c40e3aa8da7550d84fc9e613d796a/2048/01.jpg") !important;
+    /*background: url("//d2hkcehpyog59.cloudfront.net/backgrounds/566ab97d187c40e3aa8da7550d84fc9e613d796a/2048/01.jpg") !important;*/
 }
 
 .pageOverlay {

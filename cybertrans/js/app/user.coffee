@@ -5,6 +5,7 @@ define [
     'dojo/dom-construct',
     'dojo/aspect',
     'dojo/request'
+    'dojo/keys'
     'dojo/DeferredList'
     'dijit/layout/BorderContainer',
     'dijit/layout/TabContainer',
@@ -25,7 +26,7 @@ define [
     'app/support/data/BillListData',
     'app/support/stores/Memory',
     'dojo/domReady!'
-], (array, lang, onn, domCons, aspect, request, DeferredList,
+], (array, lang, onn, domCons, aspect, request, keys, DeferredList,
     BorderContainer, TabContainer, ContentPane,
     ComboBox, Button, TextBox, FilteringSelect, DateTextBox, RadioButton, ToggleButton,
     Toolbar,
@@ -45,6 +46,7 @@ define [
             "class": "centerPanel",
             style: "height: 500px; width: 100%;"
         }, 'container')
+        tc.set('ttxCurrentData', {})
         tc.startup()
 
         cp1 = new ContentPane {
@@ -84,16 +86,22 @@ define [
                     cacheClass: Cache
                     store: store
                     structure: structure
+                    selectRowTriggerOnCell: true
+                    paginationBarMessage: "[ ${2} 到 ${3} ] (共 ${0} ), 已选择 ${1} 条",
                     modules: [
                         modules.Bar,
                         modules.RowHeader,
                         modules.IndirectSelect,
                         modules.ExtendedSelectRow,
-                        modules.MoveRow,
-                        modules.DndRow,
+#                        modules.MoveRow,
+#                        modules.DndRow,
                         modules.VirtualVScroller
+                        modules.SingleSort,
+                        modules.ColumnResizer,
+                        modules.Pagination,
+                        modules.ExtendedSelectColumn,
+                        modules.PaginationBar
                     ]
-                    selectRowTriggerOnCell: true
                 }, args
             ));
             g.placeAt(container);
@@ -102,24 +110,26 @@ define [
 
         listDiv = domCons.create 'div', {id: 'listGridContainer'}, cp1.domNode
         structure = [
-            {id: 'username', field: 'username', name: '用户名称', width: '100px'},
-            {id: 'usercode', field: 'usercode', name: '用户编码', width: '100px'}
+            {id: 'username', field: 'us_username', name: '用户名称', width: '100px'},
+            {id: 'usercode', field: 'us_usercode', name: '用户编码', width: '100px'}
         ]
         grid1Toolbar = new Toolbar({});
-        grid1Toolbar.addChild(new Button({
+        listGridAddButton = new Button({
             label: '新增',
 #            showLabel:false,
             iconClass: "dijitEditorIcon dijitEditorIconCopy",
-            onClick: ()->
-                alert('cut');
-        }));
-        grid1Toolbar.addChild(new Button({
+#            onClick: ()->
+#                alert('cut');
+        })
+        grid1Toolbar.addChild(listGridAddButton);
+        listGridDeleteButton = new Button({
             label: '删除',
             iconClass: "dijitEditorIcon dijitEditorIconDelete",
 #            showLabel: false,
-            onClick: ()->
-                alert('paste');
-        }));
+#            onClick: ()->
+#                alert('paste');
+        })
+        grid1Toolbar.addChild(listGridDeleteButton);
         listGrid = createGrid('listGrid', 'listGridContainer', new Memory(data: []), structure, {
             style: {width: '100%', height: '300px'},
             barTop: [{content: '<h1>用户列表 </h1>'}, grid1Toolbar]
@@ -160,8 +170,8 @@ define [
         roleStore = new Memory({
             data: [
                 {name: "Admin", id: "Admin"},
-                {name: "Admin 1", id: "Admin-1"},
-                {name: "Admin User", id: "Admin-User"},
+                {name: "Admin1", id: "Admin1"},
+                {name: "AdminUser", id: "AdminUser"},
                 {name: "User", id: "User"},
                 {name: "SJ", id: "SJ"},
                 {name: "CG", id: "CG"},
@@ -265,6 +275,137 @@ define [
         domCons.create 'label', {innerHTML: '自定义字段10', for: 'extr10'}, cp2.domNode
         extr10 = new TextBox {id: 'extr10'}
         domCons.place extr10.domNode, cp2.domNode
+
+        # default focus
+        queryUserCode.focus()
+
+        # load bill form
+        loadBillForm = (data)->
+            tc.selectChild cp2
+            tc.set('ttxCurrentData', data)
+            console.log(data)
+            editUserCode.focus()
+            editUserCode.set 'value', data.us_usercode.trim()
+            editUserName.set 'value', data.us_username.trim()
+            editDepartment.set 'value', data.us_department.trim()
+            editPassword.set 'value', data.us_password.trim()
+            editRole.set 'value', data.us_role.trim()
+            editActive1.set 'value', data.us_active
+            editActive2.set 'value', 1 - data.us_active
+            editStartDate.set 'value', data.us_start_date.trim()
+            editEndDate.set 'value', data.us_end_date.trim()
+            editAllowLogin1.set 'value', data.us_allow_login
+            editAllowLogin2.set 'value', 1 - data.us_allow_login
+            extr1.set 'value', data.us_extr1
+            extr2.set 'value', data.us_extr2
+            extr3.set 'value', data.us_extr3
+            extr4.set 'value', data.us_extr4
+            extr5.set 'value', data.us_extr5
+            extr6.set 'value', data.us_extr6
+            extr7.set 'value', data.us_extr7
+            extr8.set 'value', data.us_extr8
+            extr9.set 'value', data.us_extr9
+            extr10.set 'value', data.us_extr10
+
+
+        # action binding
+        onn queryButton, 'click', (e)->
+            queryButton.set('disabled',true)
+            request(base_url + '/rest/demo/user/list', {
+                handleAs: 'json'
+                query: {
+                    'usercode': queryUserCode.get('value')
+                    'username': queryUserName.get('value')
+                    'department': queryDepartment.get('value')
+                }
+            }).then(
+                (data)->
+                    listGrid.setStore(new Memory data: data)
+                    queryButton.set('disabled',false)
+                (err)->
+                    alert(err);
+                    queryButton.set('disabled',false)
+            )
+        onn listGridAddButton, 'click', (e)->
+            tc.selectChild cp2
+            editUserCode.focus()
+
+        onn listGridDeleteButton, 'click', (e)->
+            console.log
+            request(base_url + '/rest/demo/user', {
+                method: 'delete',
+                handleAs: 'json',
+                data: JSON.stringify(listGrid.select.row.getSelected())
+                headers: {'Content-Type': 'application/json'}
+                query: {
+                    'usercode': queryUserCode.get('value')
+                    'username': queryUserName.get('value')
+                    'department': queryDepartment.get('value')
+                }
+            }).then(
+                (data)->
+                    listGrid.setStore(new Memory data: data)
+            )
+
+        getFormData = ()->
+            data = []
+            data.us_username = editUserName.get('value')
+            data.us_usercode = editUserCode.get('value')
+            data.us_department = editDepartment.get('value')
+            data
+
+        saveFormData = ()->
+            saveButton.set('disabled',true)
+            data = getFormData()
+            request(base_url + '/rest/demo/user', {
+                data: JSON.stringify(lang.mixin(tc.get('ttxCurrentData'), data)),
+                handleAs: 'json'
+                method: 'put'
+                headers: {'Content-Type': 'application/json'}
+            }).then(
+                (res)->
+                    console.log res
+                    saveButton.set('disabled',false)
+                (err)->
+                    alert err
+                    saveButton.set('disabled',false)
+            )
+
+        onn saveButton, 'click', (e)->
+            saveFormData()
+
+        resetFormData = ()->
+            loadBillForm(tc.get('ttxCurrentData'))
+
+        onn resetButton, 'click', (e)->
+            resetFormData()
+
+        onn listGrid, 'cellDblClick', (evt)->
+            item = listGrid.row(evt.rowIndex).item()
+            loadBillForm(item)
+
+        # key binding
+        onn window, 'keyup', (evt)->
+            charOrCode = evt.charCode || evt.keyCode
+            if evt.altKey
+                if charOrCode == 83
+                    saveFormData()
+#                    onn.emit saveButton, 'click', {
+#                        bubbles: true,
+#                        cancelable: true
+#                    }
+                else if charOrCode == 82
+                    resetFormData()
+                    onn.emit resetButton, 'click', {
+                        bubbles: true,
+                        cancelable: true
+                    }
+
+
+
+
+
+
 
 
 
