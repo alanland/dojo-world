@@ -111,7 +111,8 @@ define [
         listDiv = domCons.create 'div', {id: 'listGridContainer'}, cp1.domNode
         structure = [
             {id: 'username', field: 'us_username', name: '用户名称', width: '100px'},
-            {id: 'usercode', field: 'us_usercode', name: '用户编码', width: '100px'}
+            {id: 'usercode', field: 'us_usercode', name: '用户编码', width: '100px'},
+            {id: 'department', field: 'us_department', name: '部门', width: '100px'}
         ]
         grid1Toolbar = new Toolbar({});
         listGridAddButton = new Button({
@@ -309,7 +310,7 @@ define [
 
 
         # action binding
-        onn queryButton, 'click', (e)->
+        queryList = ()->
             queryButton.set('disabled',true)
             request(base_url + '/rest/demo/user/list', {
                 handleAs: 'json'
@@ -326,6 +327,8 @@ define [
                     alert(err);
                     queryButton.set('disabled',false)
             )
+        onn queryButton, 'click', (e)->
+            queryList()
         onn listGridAddButton, 'click', (e)->
             tc.selectChild cp2
             editUserCode.focus()
@@ -388,18 +391,24 @@ define [
         onn window, 'keyup', (evt)->
             charOrCode = evt.charCode || evt.keyCode
             if evt.altKey
-                if charOrCode == 83
+                if charOrCode == 83 # s
                     saveFormData()
 #                    onn.emit saveButton, 'click', {
 #                        bubbles: true,
 #                        cancelable: true
 #                    }
-                else if charOrCode == 82
+                else if charOrCode == 82 # r
                     resetFormData()
-                    onn.emit resetButton, 'click', {
-                        bubbles: true,
-                        cancelable: true
-                    }
+#                    onn.emit resetButton, 'click', {
+#                        bubbles: true,
+#                        cancelable: true
+#                    }
+                else if charOrCode == 81 # q
+                    queryList()
+#                    onn.emit resetButton, 'click', {
+#                        bubbles: true,
+#                        cancelable: true
+#                    }
 
 
 
