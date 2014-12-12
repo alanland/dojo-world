@@ -13,6 +13,8 @@
 
         var img = new Image();
         var canvas = document.querySelector('canvas');
+        ctx = canvas.getContext("2d")
+        ctx.globalCompositeOperation = "destination-out";
         canvas.style.backgroundColor = 'transparent';
         canvas.style.position = 'absolute';
 

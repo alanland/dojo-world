@@ -14,6 +14,10 @@ define [
 
     # store: TreeModelStore
     #   导航的store。new args.navigator.store(args.navigator.storeArgs)
+    #
+    #   item 中的type:
+    #       'amd': 加载 amd 模块返回一个界面widget对象，符合 wso 接口
+    #       'wso': workspace object 定义
         store: null
 
     # model: TreeModel
@@ -32,7 +36,7 @@ define [
             #   获取默认的 model
             data = [
                 {"id": "root", "name": "TTX", "type": "root"},
-                {"id": "user", "name": "用户", "type": "continent", "parent": "root"},
+                {"id": "user", "name": "用户", "type": "amd", "parent": "root"},
                 {"id": "basis", "name": "基础资料", "type": "continent", "parent": "root"},
                 {"id": "basis_general", "name": "通用", "type": "country", "parent": "basis"},
                 {"id": "owner", "name": "货主", "type": "city", "parent": "basis_general"},

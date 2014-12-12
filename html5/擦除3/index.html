@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="zh-cn">
+<head>
+    <meta charset="utf-8">
+    <title>html5 canvas</title>
+</head>
+<body>
+<canvas></canvas>
+<script>
+    (function (bodyStyle) {
+        bodyStyle.mozUserSelect = 'none';
+        bodyStyle.webkitUserSelect = 'none';
+
+        var img = new Image();
+        var canvas = document.querySelector('canvas'), ctx = canvas.getContext("2d");
+        var x1, y1, x2, y2, a = 30;
+        ctx.globalCompositeOperation = "destination-out";
+        canvas.style.backgroundColor = 'transparent';
+        canvas.style.position = 'absolute';
+
+        img.addEventListener('load', function (e) {
+            var hastouch = "ontouchstart" in window ? true : false,
+                    tapstart = hastouch ? "touchstart" : "mousedown",
+                    tapmove = hastouch ? "touchmove" : "mousemove",
+                    tapend = hastouch ? "touchend" : "mouseup";
+//            var ctx;
+
+            canvas.addEventListener(tapstart, function (e) {
+                e.preventDefault();
+                x1 = hastouch ? e.targetTouches[0].pageX : e.clientX - canvas.offsetLeft;
+                y1 = hastouch ? e.targetTouches[0].pageY : e.clientY - canvas.offsetTop;
+
+
+                ctx.lineCap = "round";
+                ctx.lineJoin = "round";
+                ctx.lineWidth = a * 2;
+                ctx.globalCompositeOperation = "destination-out";
+                ctx.save();
+                ctx.beginPath();
+                ctx.arc(x1, y1, 1, 0, 2 * Math.PI);
+                ctx.fill();
+                ctx.restore();
+
+                canvas.addEventListener(tapmove, tapmoveHandler);
+                canvas.addEventListener(tapend, function () {
+                    canvas.removeEventListener(tapmove, tapmoveHandler);
+                });
+                function tapmoveHandler(e) {
+                    e.preventDefault();
+                    x2 = hastouch ? e.targetTouches[0].pageX : e.clientX - canvas.offsetLeft;
+                    y2 = hastouch ? e.targetTouches[0].pageY : e.clientY - canvas.offsetTop;
+
+                    ctx.save();
+                    ctx.moveTo(x1, y1);
+                    ctx.lineTo(x2, y2);
+                    ctx.stroke();
+                    ctx.restore();
+
+                    x1 = x2;
+                    y1 = y2;
+                }
+            });
+
+            var w = img.width, h = img.height;
+            function layer(ctx) {
+                var img = document.getElementById("lamp");
+                var pat = ctx.createPattern(img, "repeat");
+                ctx.fillStyle = pat;
+                ctx.fillRect(0, 0, w, h);
+            }
+
+            canvas.width = w;
+            canvas.height = h;
+            canvas.style.backgroundImage = 'url(' + img.src + ')';
+            layer(ctx);
+        });
+        img.src = 'images/girl.jpg';
+    })(document.body.style);
+</script>
+
+<img id="lamp" src="images/girl1.jpg">
+</body>
+</html>
