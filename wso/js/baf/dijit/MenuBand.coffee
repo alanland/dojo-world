@@ -48,7 +48,7 @@ define [
             if (contents.length)
                 result = [contents[0]];
                 group = contents[0].group;
-                for i in [1..contents.length-1]
+                for i in [1..contents.length - 1]
                     content = contents[i]
                     if content.group != group
                         result.push({id: "separator", type: commandType.separator})

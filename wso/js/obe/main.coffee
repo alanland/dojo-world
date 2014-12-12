@@ -21,7 +21,7 @@ define [
     navigator:
       store: LazyTreeStore,
       storeArgs: {service: dojo.xhr},
-      model: LazyTreeModel,
+#      model: LazyTreeModel,
       modelArgs: {},
       widget: Tree,
       widgetArgs:

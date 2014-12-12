@@ -13,3 +13,4 @@ define [
                 this.removeChild(child);
                 child.destroy();
             , this);
+
