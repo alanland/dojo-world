@@ -10,40 +10,45 @@
         @import "http://localhost/www/dojo/dijit/themes/claro/document.css";
         @import "http://localhost/www/dojo/gridx/resources/claro/Gridx.css";
     </style>
-    <link rel="stylesheet" href="css/main.css" media="screen">
+    <link rel="stylesheet" href="css/app.css" media="screen">
 </head>
 <body class="claro">
-<div id="container">
-    <!--<div id="left"></div>-->
-    <!--<div id="center"></div>-->
+<!--<div id="container">-->
+<div id="bafLoading">
+    <p>loading...</p>
 </div>
+<!--<div id="left"></div>-->
+<!--<div id="center"></div>-->
+<!--</div>-->
 <script>
     contextPath = location.pathname.substring(0, location.pathname.lastIndexOf('/'));
     dojoConfig = {
         async: true,
         parseOnLoad: true,
         packages: [
-            {name: "app", location: contextPath + "/js/app"}
+            {name: "ttx", location: contextPath + "/js/ttx"}
         ]
     };
 </script>
 <script src="http://localhost/www/dojo/dojo/dojo.js"></script>
 <script>
-    require(['app/app'],function(app){
-        app.startup({});
+    require(['ttx/app', 'dojo/ready', 'dojo/domReady!'], function (app, ready) {
+        ready(function(){
+            app.startup({})
+        });
     });
-//    require(["obe/main", 'lib/underscore', "dojo/domReady!"], function (main, _) {
-////        window._ = _;
-//        // eg: location.search = "?test=run001"
-//        var testId = location.search.match(/(\?test\=)(\w+)/);
-//        if (testId) {
-//            require(['obe/test/tests/' + testId[2]], function (test) {
-//                console.log(test);
-//            });
-//        } else {
-//            main.startup({});
-//        }
-//    });
+    //    require(["obe/main", 'lib/underscore', "dojo/domReady!"], function (main, _) {
+    ////        window._ = _;
+    //        // eg: location.search = "?test=run001"
+    //        var testId = location.search.match(/(\?test\=)(\w+)/);
+    //        if (testId) {
+    //            require(['obe/test/tests/' + testId[2]], function (test) {
+    //                console.log(test);
+    //            });
+    //        } else {
+    //            main.startup({});
+    //        }
+    //    });
 </script>
 </body>
 </html>
