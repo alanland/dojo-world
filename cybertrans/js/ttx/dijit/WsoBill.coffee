@@ -56,6 +56,9 @@ define [
         cpDetail: null # content pane 3
         queryForm: null # query form in cpList
         listGrid: null # grid in cpList
+        billForm: null # bill form in cpBill
+        detailGrid: null # detail grid in billForm
+        detailForm: null # detail form in cpDetail
 
 
     # ctrl: dojox/mvc/ModelRefController
@@ -128,8 +131,13 @@ define [
             @inherited arguments
 
             thiz = this;
-            @wsoDef.then (data)->
-                thiz._continueWithWsoDef(data);
+            @wsoDef.then(
+                (data)->
+                    thiz._continueWithWsoDef(data)
+                (err)->
+                    console.log(err)
+            )
+
 #            @data.then (data)->
 #                thiz._continueWithData(data);
 ##                lang.hitch(owner,owner._continueWithWsoDef);
@@ -324,7 +332,7 @@ define [
             @dataResult = getStateful data;
             @ctrl = new ModelRefController model: @dataResult
             if (@wsoDefResult)
-                @_finishLoad();
+                @_finishLoad()
 
         _continueWithWsoDef: (wsoDef) ->
             @wsoDefResult = wsoDef;
@@ -350,16 +358,16 @@ define [
                 require @wsoDefResult.require, ->
             @_buildForm();
 
-        _addTtxField: (fdef, pane)->
+        _getTtxField: (fdef)->
             # summary:
             #   获取字段定义
             #　      {"id": "code", "type": "string", "field": "code", "name": "代码", "operator": "like"},
-            fieldDiv = domConstruct.create 'div', {class: 'ttx-field'}, pane.domNode
+            fieldDiv = domConstruct.create 'div', {class: 'ttx-field'}
             # todo type
             domConstruct.create 'label', {innerHTML: fdef.name}, fieldDiv
             field = new TextBox(name: fdef.field)
             domConstruct.place field.domNode, fieldDiv
-            domConstruct.place fieldDiv, pane.domNode
+            fieldDiv
 
         _getAction: (actDef)->
             #            {"id": "query", "action": "query", "name": "Query"}
@@ -371,6 +379,7 @@ define [
                     btn.onClick = lang.hitch @globalActionSet, actDef.action
                 else
                     console.error '配置的 Action 不存在'
+                    console.log actDef
             else if idx == 0 # default module
                 ''
             else # module need amd
@@ -440,27 +449,55 @@ define [
             queryForm = @queryForm = new Form()
             @cpList.addChild queryForm
             for fdef in wsoDef.queryFields
-                @_addTtxField fdef, queryForm
+                domConstruct.place @_getTtxField(fdef), queryForm.domNode
 
             # 查询按钮
             queryActions = domConstruct.create 'div', {}, queryForm.domNode
-            for act in wsoDef.queryActions
-                @_addAction act, queryActions
+            for adef in wsoDef.queryActions
+                @_addAction adef, queryActions
 
-            # 列表
+            # 列表容器
             listDiv = domConstruct.create 'div', {class: 'listGridContainer'}, @cpList.domNode
+            # 列表工具栏
             listToolbar = new Toolbar {}
             for adef in wsoDef.listActions
-                console.log listToolbar.addChild
-                btn = @_getAction(adef)
-                listToolbar.addChild btn
-            #
-            #    "listActions": [
-            #        {"id": "new", "action": "new", "name": "New"},
-            # todo buttons
+                listToolbar.addChild @_getAction(adef)
+            # 列表Grid
             @listGrid = @_createGrid(listDiv, new Memory(data: []), wsoDef.listStructure, {
                 barTop: [{content: '<h1>用户列表 </h1>'}, listToolbar]
             })
+
+            # 内容页
+            billForm = @billForm = new Form()
+            @cpBill.addChild billForm
+            # 内容单据
+            billActionsDom = domConstruct.create 'div', {}, billForm.domNode
+            for adef in wsoDef.headerActions
+                @_addAction adef, billActionsDom
+            # 字段
+            billFieldsDom = domConstruct.create 'div',{},billForm.domNode
+            for fdef in wsoDef.headerFields
+                domConstruct.place @_getTtxField(fdef), billFieldsDom
+            # 明细Grid
+            detailDiv = domConstruct.create 'div', {class: 'detailGridContainer'}, @billForm.domNode
+            # 列表工具栏
+            detailToolbar = new Toolbar {}
+            for adef in wsoDef.detailActions
+                detailToolbar.addChild @_getAction(adef)
+            # 列表Grid
+            @detailGrid = @_createGrid(detailDiv, new Memory(data: []), wsoDef.detailStructure, {
+                barTop: [{content: '<h1>用户列表 </h1>'}, detailToolbar]
+            })
+
+            # detail edit fields
+            detailForm = @detailForm = new Form()
+            @cpDetail.addChild detailForm
+            detailActionsDom = domConstruct.create 'div', {}, detailForm.domNode
+            for adef in wsoDef.detailEditActions
+                @_addAction adef, detailActionsDom
+            detailFieldsDom = domConstruct.create 'div',{},detailForm.domNode
+            for fdef in wsoDef.detailEditFields
+                domConstruct.place @_getTtxField(fdef), detailFieldsDom
 
 
 

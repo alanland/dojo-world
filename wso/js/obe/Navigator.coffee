@@ -36,7 +36,7 @@ define [
             #   获取默认的 model
             data = [
                 {"id": "root", "name": "TTX", "type": "root"},
-                {"id": "user", "name": "用户", "type": "amd", "parent": "root"},
+                {"id": "user", "name": "用户", "type": "amd", "parent": "root", oid: 'user'},
                 {"id": "basis", "name": "基础资料", "type": "continent", "parent": "root"},
                 {"id": "basis_general", "name": "通用", "type": "country", "parent": "basis"},
                 {"id": "owner", "name": "货主", "type": "city", "parent": "basis_general"},

@@ -27,7 +27,7 @@ define [
 
     _showObject: (item)->
       # todo store 什么时候穿寄来的，还没有使用
-      type = item['tid'] # the wosDefinition type
+      type = item['type'] # the wosDefinition type
       oid = item['oid'] # the object id
       nid = item['id'] # the navigator id
       currentObject = @currentObject
@@ -38,7 +38,9 @@ define [
       data = main.dataManager.get(type, oid) # todo remove main
       wsoDef = main.wsoDefinitionsManager.get(type)
       theNewObject = new Wso {
-        data: data,wsoDef: wsoDef, closable: true,
+        data: data,
+        wsoDef: wsoDef,
+        closable: true,
         navigator: item,
         title: item.name
       }

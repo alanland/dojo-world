@@ -20,11 +20,13 @@ define [
                 console.log this
                 alert(this)
             console.log @wso.queryForm.getValues()
-        new: (e)->
+        new: ->
             @wso.selectChild @wso.cpBill
-        edit: (e)->
+    # todo
+        edit: ->
             @wso.selectChild @wso.cpBill
-        delete: (e)->
+    # todo
+        delete: ->
             server = @wso.app.server
             grid = @wso.listGrid
             request(server + 'rest/' + @wso.navigatorItem.id, {
@@ -36,6 +38,22 @@ define [
                 (data)->
                     grid.setStore(new Memory data: data)
             )
+        save: ->
+            '' #todo
+        reset: ->
+            '' #todo
+        newDetail: ->
+            @wso.selectChild @wso.cpDetail
+            '' #todo
+        editDetail: ->
+            @wso.selectChild @wso.cpDetail
+            '' #todo
+        deleteDetail: ->
+            '' #todo
+        saveDetail: ->
+            '' #todo
+        resetDetail: ->
+            '' # todo
 
 
     }
