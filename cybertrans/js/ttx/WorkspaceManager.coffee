@@ -53,6 +53,7 @@ define [
             #   amd:User
             #   wso:xxx/xxx
             #   bll:xxx/xxx
+            type = item.type
             tid = item['tid']
             oid = item['nid']
             nid = item['nid']
@@ -62,14 +63,11 @@ define [
             # TODO: search for non-current, but loaded object
             #            if tid.startsWith('amd')
 
-            typeAndValue = tid.split ':'
-            type = typeAndValue[0]
-            value = typeAndValue[1]
             newWso
             if type == 'amd'
                 ''
-            else if type == 'bll'
-                defDeferred = @app.wsoDefinitionsManager.getBill value
+            else if type == 'bill'
+                defDeferred = @app.wsoDefinitionsManager.getBill tid
                 newWso = new WsoBill(
                     data: []
                     wsoDef: defDeferred

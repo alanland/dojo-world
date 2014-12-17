@@ -43,24 +43,24 @@ define [
             data = [
                 {"id": "root", "name": "TTX", "tid": "root"},
                 {"id": "user", "name": "用户", "tid": "bll:User", "parent": "root", oid: 'user'},
-                {"id": "basis", "name": "基础资料", "tid": "continent", "parent": "root"},
-                {"id": "basis_general", "name": "通用", "tid": "country", "parent": "basis"},
-                {"id": "owner", "name": "货主", "tid": "city", "parent": "basis_general"},
-                {"id": "material", "name": "物料", "tid": "city", "parent": "basis_general"},
-                {"id": "basis_wms", "name": "仓储", "tid": "country", "parent": "basis"},
-                {"id": "storeroom", "name": "仓间", "tid": "country", "parent": "basis_wms"},
-                {"id": "storearea", "name": "库区", "tid": "city", "parent": "basis_wms"},
-                {"id": "location", "name": "储位", "tid": "continent", "parent": "basis_wms"},
-                {"id": "inbound", "name": "入库", "tid": "country", "parent": "root"},
-                {"id": "receipt", "name": "入库单", "tid": "country", "parent": "inbound"},
-                {"id": "outbound", "name": "出库", "tid": "country", "parent": "root"},
-                {"id": "shipment", "name": "出库单", "tid": "country", "parent": "outbound"}
+#                {"id": "basis", "name": "基础资料", "tid": "continent", "parent": "root"},
+#                {"id": "basis_general", "name": "通用", "tid": "country", "parent": "basis"},
+#                {"id": "owner", "name": "货主", "tid": "city", "parent": "basis_general"},
+#                {"id": "material", "name": "物料", "tid": "city", "parent": "basis_general"},
+#                {"id": "basis_wms", "name": "仓储", "tid": "country", "parent": "basis"},
+#                {"id": "storeroom", "name": "仓间", "tid": "country", "parent": "basis_wms"},
+#                {"id": "storearea", "name": "库区", "tid": "city", "parent": "basis_wms"},
+#                {"id": "location", "name": "储位", "tid": "continent", "parent": "basis_wms"},
+#                {"id": "inbound", "name": "入库", "tid": "country", "parent": "root"},
+#                {"id": "receipt", "name": "入库单", "tid": "country", "parent": "inbound"},
+#                {"id": "outbound", "name": "出库", "tid": "country", "parent": "root"},
+#                {"id": "shipment", "name": "出库单", "tid": "country", "parent": "outbound"}
             ]
             store = new Memory({data: data});
-#            store = new ObjectStore({
-#                url: args.app.server + 'rest/data/navigator',
-#                handleAs: 'json'
-#            });
+            store = new ObjectStore({
+                url: args.app.server + 'rest/data/navigator',
+                handleAs: 'json'
+            });
             model = new ObjectStoreModel({
                 store: store,
                 query: {id: "root"},
