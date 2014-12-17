@@ -3,6 +3,7 @@ define [
     'dojo/request'
 ], (declare, request)->
     declare null, {
+    # todo 事件支持传参数
 #        app: null
         wsoType: 'amd'
         wso: null

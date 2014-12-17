@@ -1,13 +1,79 @@
-.ttx-field
-  display: inline-block;
-  width: 44%;
-  margin: 3px 0
+table
+    for row in 1 2 3 4 5
+        tr:nth-child-{row}
+            height: 10px * row
+.ttx-field-set
+    padding 0
+    margin 0
 
-  label
-    display: inline-block;
-    width: 25%;
-    text-align: right;
-    padding: 0 10px 0 0;
 
-  .dijit.dijitReset.dijitInline.dijitLeft.dijitTextBox
-    width: 69%;
+/*ttx-field-set 需要布局的字段*/
+label-width = 80px
+row-gap = 4px 0
+.ttx-field-row.ttx-field-row-2
+    margin row-gap
+    for col in 1 2
+        .ttx-field.ttx-field-col-{col}
+            display inline-block
+            width (50 * col) %
+
+            >label
+                display inline-block
+                width label-width
+                text-align right
+                padding 0 10px 0 0
+
+            .dijit.dijitReset.dijitInline.dijitLeft.dijitTextBox
+                width (field-w) %
+
+.ttx-field-row.ttx-field-row-3
+    margin row-gap
+    for col in 1 2 3
+        .ttx-field.ttx-field-col-{col}
+            display inline-block
+            width (33 * col) %
+
+            >label
+                display inline-block
+                width label-width
+                text-align right
+                padding 0 10px 0 0
+
+            .dijit.dijitReset.dijitInline.dijitLeft.dijitTextBox
+                width (field-w) %
+
+.ttx-field-row.ttx-field-row-4
+    margin row-gap
+    for col in 1 2 3 4
+        .ttx-field.ttx-field-col-{col}
+            display inline-block
+            width (25 * col) %
+
+            >label
+                display inline-block
+                width label-width
+                text-align right
+                padding 0 10px 0 0
+
+            .dijit.dijitReset.dijitInline.dijitLeft.dijitTextBox
+                width (field-w) %
+
+
+/*.ttx-field-row.ttx-field-row-2*/
+/*for coli in 1 2*/
+/*.ttx-field.ttx-field-col-({coli})*/
+/*display inline-block*/
+/*width (i) %;*/
+/*margin 3px 0*/
+
+/*label-percent = 25*/
+/*label*/
+/*display inline-block*/
+/*width 100px*/
+/*text-align right*/
+/*padding 0 10px 0 0*/
+
+/*textbox-percent = 70*/
+/*.dijit.dijitReset.dijitInline.dijitLeft.dijitTextBox*/
+/*width (textbox-percent) %*/
+

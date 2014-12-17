@@ -74,6 +74,7 @@ define [
                 openOnClick: true
                 region: 'left'
                 splitter: true
+                id: 'navigator'
             )
 
             @widget.startup()

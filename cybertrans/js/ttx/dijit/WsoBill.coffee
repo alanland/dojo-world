@@ -137,6 +137,10 @@ define [
                 (err)->
                     console.log(err)
             )
+            this.own(aspect.after @, 'selectChild', ()->
+                    pane = arguments[1][0]
+                    thiz.layoutPane pane
+                true,)
 
 #            @data.then (data)->
 #                thiz._continueWithData(data);
@@ -148,23 +152,6 @@ define [
             # summary:
             #       提交数据
             @_submit() if not @onSubmit() == false
-
-        _submit: -> #todo 提交数据
-            console.log '----------------------Submit----------------------'
-
-
-#        addChild: (widget) ->
-#            domConstruct.place(widget.domNode, @domNode, "last");
-#            if (@_started and !widget._started and widget.startup)
-#                widget.startup();
-
-        addChild: (widget, insertIndex)->
-            # summary:
-            #       返回添加的widget
-            # tags:
-            #       override
-            @inherited(arguments)
-            widget
 
         addFields: (fieldDefs, refNode)->
             # summary:
@@ -277,24 +264,26 @@ define [
             # summary:
             #       设置 field 的多列布局
             #       layout 方法，在resize时候触发
-            fieldClass = @fieldClass
-            query('.' + @panelClass, @domNode).forEach (panel)->
-                cols = panel.getAttribute('cols')
-                if cols > 0
-                    panelBox = domGeometry.getContentBox panel
-                    fieldWidth = parseInt(panelBox.w / cols)
-                    query('.' + fieldClass, panel).forEach (field)->
-                        domGeometry.setMarginBox field, w: fieldWidth
+            @inherited arguments
+
+            cpListParentBox = domGeometry.getContentBox(@cpList.domNode.parentElement)
+            domGeometry.setMarginBox(@cpList.domNode, w: cpListParentBox.w, true)
+
+        layoutPane: (pane)->
+            query('.ttx-field-set', pane.domNode).forEach (fieldSet)->
+                setBox = domGeometry.getContentBox(fieldSet)
+                query('.ttx-field-row', fieldSet).forEach (row)->
+                    domGeometry.setMarginBox(row, w: setBox.w, true)
+                    cols = row.getAttribute('ttx-field-row-cols') || 3
+                    rowBox = domGeometry.getContentBox row
+                    singleFieldWidth = parseInt(rowBox.w / cols)
+                    query('.ttx-field', row).forEach (field)->
+                        span = field.getAttribute('ttx-field-span')
+                        fieldWidth = singleFieldWidth * span
+                        domGeometry.setMarginBox(field, w: fieldWidth, true)
                         children = field.childNodes
                         if children.length == 2 and children[0].tagName == 'LABEL'
                             domGeometry.setMarginBox children[1], w: fieldWidth - domGeometry.getMarginBox(children[0]).w
-#      contentBox = domGeometry.getContentBox @domNode
-#      fieldWidth = contentBox.w / @cols
-#      query('.' + @fieldClass, @domNode).forEach (node)->
-#        domGeometry.setMarginBox(node, {w: fieldWidth})
-#        children = node.childNodes
-#        if children.length == 2 and children[0].tagName == 'LABEL'
-#          domGeometry.setMarginBox children[1], {w: fieldWidth - domGeometry.getMarginBox(children[0]).w}
 
         setEnable: (field, enable)->
             # summary:
@@ -358,16 +347,38 @@ define [
                 require @wsoDefResult.require, ->
             @_buildForm();
 
-        _getTtxField: (fdef)->
+        _newTtxFieldRow: (domNode, columns)->
+            div = domConstruct.create 'div', {class: 'ttx-field-row ttx-field-row-' + columns}, domNode
+            div.setAttribute('ttx-field-row-cols', columns)
+            div
+
+        _getTtxField: (fdef, cls)->
             # summary:
             #   获取字段定义
             #　      {"id": "code", "type": "string", "field": "code", "name": "代码", "operator": "like"},
-            fieldDiv = domConstruct.create 'div', {class: 'ttx-field'}
+            fieldDiv = domConstruct.create 'div', {
+                class: 'ttx-field ttx-field-col-' + cls,
+                'ttx-field-span': cls
+            }
             # todo type
             domConstruct.create 'label', {innerHTML: fdef.name}, fieldDiv
             field = new TextBox(name: fdef.field)
             domConstruct.place field.domNode, fieldDiv
             fieldDiv
+        _addTtxFieldSet: (defs, domNode, columns)->
+            row = null # row 定义
+            fieldNumber = 0
+            fieldSetDom = domConstruct.create 'div', {class: 'ttx-field-set'}, domNode
+            for fdef in defs
+                layout = lang.mixin {span: 1, wrap: false}, (fdef.layout || {}) # 默认 layout
+                layout.span = columns if layout.span > columns # 限制当前 span 大小
+                fieldNumber = fieldNumber % columns # 当前fieldNumber取余数，便于因为当前大小超出的字段换行处理
+                if fieldNumber == 0 || layout.wrap || (fieldNumber + layout.span > columns)
+                    # 对新行的判断 行尾自动换行 || 强制换行　|| 放不下了，自动换行
+                    row = @_newTtxFieldRow(fieldSetDom, columns)
+                    fieldNumber = 0
+                fieldNumber += layout.span
+                domConstruct.place @_getTtxField(fdef, layout.span), row
 
         _getAction: (actDef)->
             #            {"id": "query", "action": "query", "name": "Query"}
@@ -389,33 +400,44 @@ define [
         _addAction: (actDef, domNode)->
             domConstruct.place @_getAction(actDef).domNode, domNode
 
-        _createGrid: (container, store, structure, args)->
+        _createGridx: (container, store, structure, args)->
             g = new Grid(lang.mixin({
 #                    id: id,
-                    cacheClass: Cache
-                    store: store
-                    structure: structure
-                    selectRowTriggerOnCell: true
-                    paginationBarMessage: "[ ${2} 到 ${3} ] (共 ${0} ), 已选择 ${1} 条",
-                    modules: [
-                        modules.Bar,
-                        modules.RowHeader,
-                        modules.IndirectSelect,
-                        modules.ExtendedSelectRow,
+                cacheClass: Cache
+                store: store
+                structure: structure
+                selectRowTriggerOnCell: true
+                paginationBarMessage: "[ ${2} 到 ${3} ] (共 ${0} ), 已选择 ${1} 条",
+                modules: [
+                    modules.Bar,
+                    modules.RowHeader,
+                    modules.IndirectSelect,
+                    modules.ExtendedSelectRow,
 #                        modules.MoveRow,
 #                        modules.DndRow,
-                        modules.VirtualVScroller
-                        modules.SingleSort,
-                        modules.ColumnResizer,
-                        modules.Pagination,
-                        modules.ExtendedSelectColumn,
-                        modules.PaginationBar
-                    ]
-                }, args
-            ));
+                    modules.VirtualVScroller
+                    modules.SingleSort,
+                    modules.ColumnResizer,
+                    modules.Pagination,
+                    modules.ExtendedSelectColumn,
+                    modules.PaginationBar
+                ]
+            }, args));
             g.placeAt(container);
             g.startup();
             g
+        _addGrid: (listDef, domNode)->
+            # 列表容器
+            listDiv = domConstruct.create 'div', {class: 'listGridContainer'}, domNode
+            # 列表工具栏
+            listToolbar = new Toolbar {}
+            for adef in listDef.actions
+                listToolbar.addChild @_getAction(adef)
+            # 列表Grid
+            grid = @_createGridx(listDiv, new Memory(data: []), listDef.structure, {
+                barTop: [{content: '<h1>' + listDef.name || '' + ' </h1>'}, listToolbar]
+            })
+            grid
 
         _buildForm: ->
             fx.fadeOut({
@@ -426,7 +448,7 @@ define [
             domConstruct.destroy @_loading
             delete @_loading
 
-            @cpList = new ContentPane(title: '用户查询', style: "width:100%;height:100%")
+            @cpList = new ContentPane(title: '用户查询')
             @addChild @cpList
             @cpBill = new ContentPane(title: '内容')
             @addChild @cpBill
@@ -439,80 +461,62 @@ define [
             # 当前界面用户自定义 action 集合
             thiz = this
             actionJs = wsoDef.actionJsModule
-            if actionJs && actionJs.length > 0
-                require actionJs, (ajs)->
-                    @currentActionSet = new ajs wso: thiz
-            else
-                @currentActionSet = @globalActionSet
+            if wsoDef.list
+                listDef = wsoDef.list
+                if actionJs && actionJs.length > 0
+                    require actionJs, (ajs)->
+                        @currentActionSet = new ajs wso: thiz
+                else
+                    @currentActionSet = @globalActionSet
 
-            # 查询条件
-            queryForm = @queryForm = new Form()
-            @cpList.addChild queryForm
-            for fdef in wsoDef.queryFields
-                domConstruct.place @_getTtxField(fdef), queryForm.domNode
+                # 查询条件
+                queryForm = @queryForm = new Form()
+                @cpList.addChild queryForm
+                @_addTtxFieldSet(listDef.queryFields, queryForm.domNode, listDef.columns || 2)
 
-            # 查询按钮
-            queryActions = domConstruct.create 'div', {}, queryForm.domNode
-            for adef in wsoDef.queryActions
-                @_addAction adef, queryActions
+                # 查询按钮
+                queryActions = domConstruct.create 'div', {}, queryForm.domNode
+                for adef in listDef.queryActions
+                    @_addAction adef, queryActions
 
-            # 列表容器
-            listDiv = domConstruct.create 'div', {class: 'listGridContainer'}, @cpList.domNode
-            # 列表工具栏
-            listToolbar = new Toolbar {}
-            for adef in wsoDef.listActions
-                listToolbar.addChild @_getAction(adef)
-            # 列表Grid
-            @listGrid = @_createGrid(listDiv, new Memory(data: []), wsoDef.listStructure, {
-                barTop: [{content: '<h1>用户列表 </h1>'}, listToolbar]
-            })
+                @listGrid = @_addGrid(listDef.listGrid, @cpList.domNode)
+                @selectChild @cpList
 
             # 内容页
-            billForm = @billForm = new Form()
-            @cpBill.addChild billForm
-            # 内容单据
-            billActionsDom = domConstruct.create 'div', {}, billForm.domNode
-            for adef in wsoDef.headerActions
-                @_addAction adef, billActionsDom
-            # 字段
-            billFieldsDom = domConstruct.create 'div',{},billForm.domNode
-            for fdef in wsoDef.headerFields
-                domConstruct.place @_getTtxField(fdef), billFieldsDom
-            # 明细Grid
-            detailDiv = domConstruct.create 'div', {class: 'detailGridContainer'}, @billForm.domNode
-            # 列表工具栏
-            detailToolbar = new Toolbar {}
-            for adef in wsoDef.detailActions
-                detailToolbar.addChild @_getAction(adef)
-            # 列表Grid
-            @detailGrid = @_createGrid(detailDiv, new Memory(data: []), wsoDef.detailStructure, {
-                barTop: [{content: '<h1>用户列表 </h1>'}, detailToolbar]
-            })
+            if wsoDef.bill
+                billDef = wsoDef.bill
+                billForm = @billForm = new Form()
+                @cpBill.addChild billForm
+                # 内容单据
+                billActionsDom = domConstruct.create 'div', {}, billForm.domNode
+                for adef in billDef.headerActions
+                    @_addAction adef, billActionsDom
+                # 字段
+                @_addTtxFieldSet(billDef.headerFields, billForm.domNode, billDef.columns || 2)
+                @detailGrid = @_addGrid(billDef.detailGrid, @billForm.domNode)
 
-            # detail edit fields
-            detailForm = @detailForm = new Form()
-            @cpDetail.addChild detailForm
-            detailActionsDom = domConstruct.create 'div', {}, detailForm.domNode
-            for adef in wsoDef.detailEditActions
-                @_addAction adef, detailActionsDom
-            detailFieldsDom = domConstruct.create 'div',{},detailForm.domNode
-            for fdef in wsoDef.detailEditFields
-                domConstruct.place @_getTtxField(fdef), detailFieldsDom
+            if wsoDef.detail
+                detailDef = wsoDef.detail
+                # detail edit fields
+                detailForm = @detailForm = new Form()
+                @cpDetail.addChild detailForm
+                detailActionsDom = domConstruct.create 'div', {}, detailForm.domNode
+                for adef in detailDef.detailEditActions
+                    @_addAction adef, detailActionsDom
+
+                @_addTtxFieldSet(detailDef.detailEditFields, detailForm.domNode, detailDef.columns || 2)
 
 
-
-
-
-    #            ## todo
-    #            for itemDef in wsoDef
-    #                @addWsoItemDef itemDef, @containerNode
-    #            #      @cols = wsoDef.cols
-    #            #      @addFields wsoDef.children if wsoDef.children
-    #            #      @addGrid wsoDef.grid if wsoDef.grid
-    #            if @actions
-    #                for action in @actions
-    #                    action.call this
-#            @layout()
+            #            ## todo
+            #            for itemDef in wsoDef
+            #                @addWsoItemDef itemDef, @containerNode
+            #            #      @cols = wsoDef.cols
+            #            #      @addFields wsoDef.children if wsoDef.children
+            #            #      @addGrid wsoDef.grid if wsoDef.grid
+            #            if @actions
+            #                for action in @actions
+            #                    action.call this
+            @layout()
 
         _buildForm2: ->
             domConstruct.destroy(@_loading);
