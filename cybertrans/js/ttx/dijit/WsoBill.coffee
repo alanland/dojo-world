@@ -45,8 +45,9 @@ define [
         wsoDefResult: null # 界面定义
         wsoItems: {}
         actions: []
-        navigatorItem: {}
+
         app: null # app
+        navigatorItem: {}
 
         globalActionSet: null # global action definitions
         currentActionSet: null # current user defined action definitions
@@ -55,10 +56,20 @@ define [
         cpBill: null # content pane 2
         cpDetail: null # content pane 3
         queryForm: null # query form in cpList
-        listGrid: null # grid in cpList
         billForm: null # bill form in cpBill
-        detailGrid: null # detail grid in billForm
         detailForm: null # detail form in cpDetail
+
+        listGrid: null # grid in cpList
+        detailGrid: null # detail grid in billForm
+
+        queryCtrl: null
+        billCtrl: null
+        detailCtrl: null
+
+        queryModel: null
+        billModel: null
+        detailModel: null
+
 
 
     # ctrl: dojox/mvc/ModelRefController
@@ -67,7 +78,7 @@ define [
 
     # cols: Integer
     #       当前 Wso 有多少列，用作 Field(FormWidget) 的布局
-        cols: 2
+#        cols: 2
 
     # buttons: Object
     #       当前wso的操作按钮集合
@@ -352,7 +363,7 @@ define [
             div.setAttribute('ttx-field-row-cols', columns)
             div
 
-        _getTtxField: (fdef, cls)->
+        _getTtxField: (fdef, ctrl, cls)->
             # summary:
             #   获取字段定义
             #　      {"id": "code", "type": "string", "field": "code", "name": "代码", "operator": "like"},
@@ -362,10 +373,11 @@ define [
             }
             # todo type
             domConstruct.create 'label', {innerHTML: fdef.name}, fieldDiv
-            field = new TextBox(name: fdef.field)
+            field = new TextBox(name: fdef.field, value: at(ctrl, fdef.field))
+            field.startup()
             domConstruct.place field.domNode, fieldDiv
             fieldDiv
-        _addTtxFieldSet: (defs, domNode, columns)->
+        _addTtxFieldSet: (defs, ctrl, domNode, columns)->
             row = null # row 定义
             fieldNumber = 0
             fieldSetDom = domConstruct.create 'div', {class: 'ttx-field-set'}, domNode
@@ -378,7 +390,7 @@ define [
                     row = @_newTtxFieldRow(fieldSetDom, columns)
                     fieldNumber = 0
                 fieldNumber += layout.span
-                domConstruct.place @_getTtxField(fdef, layout.span), row
+                domConstruct.place @_getTtxField(fdef, ctrl, layout.span), row
 
         _getAction: (actDef)->
             #            {"id": "query", "action": "query", "name": "Query"}
@@ -470,12 +482,14 @@ define [
                     @currentActionSet = @globalActionSet
 
                 # 查询条件
-                queryForm = @queryForm = new Form()
-                @cpList.addChild queryForm
-                @_addTtxFieldSet(listDef.queryFields, queryForm.domNode, listDef.columns || 2)
+                formQuery = @queryForm = new Form()
+                queryModel = @queryModel = getStateful {code: 'code', name: 'name', hintCode: 'hintcode'}
+                ctrlQuery = @queryCtrl = new ModelRefController model: queryModel
+                @cpList.addChild formQuery
+                @_addTtxFieldSet(listDef.queryFields, ctrlQuery, formQuery.domNode, listDef.columns || 2)
 
                 # 查询按钮
-                queryActions = domConstruct.create 'div', {}, queryForm.domNode
+                queryActions = domConstruct.create 'div', {}, formQuery.domNode
                 for adef in listDef.queryActions
                     @_addAction adef, queryActions
 
@@ -492,7 +506,9 @@ define [
                 for adef in billDef.headerActions
                     @_addAction adef, billActionsDom
                 # 字段
-                @_addTtxFieldSet(billDef.headerFields, billForm.domNode, billDef.columns || 2)
+                billModel = @billModel = getStateful {} # todo
+                billCtrl = @billCtrl = new ModelRefController model: billModel
+                @_addTtxFieldSet(billDef.headerFields, billCtrl, billForm.domNode, billDef.columns || 2)
                 @detailGrid = @_addGrid(billDef.detailGrid, @billForm.domNode)
 
             if wsoDef.detail
@@ -504,7 +520,9 @@ define [
                 for adef in detailDef.detailEditActions
                     @_addAction adef, detailActionsDom
 
-                @_addTtxFieldSet(detailDef.detailEditFields, detailForm.domNode, detailDef.columns || 2)
+                detailModel = @detailModel = getStateful {} # todo
+                detailCtrl = @detailCtrl = new ModelRefController model: detailModel
+                @_addTtxFieldSet(detailDef.detailEditFields, detailCtrl, detailForm.domNode, detailDef.columns || 2)
 
 
             #            ## todo
@@ -517,6 +535,7 @@ define [
             #                for action in @actions
             #                    action.call this
             @layout()
+            window.bill=this
 
         _buildForm2: ->
             domConstruct.destroy(@_loading);
