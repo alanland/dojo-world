@@ -63,9 +63,38 @@ define [
             # TODO: search for non-current, but loaded object
             #            if tid.startsWith('amd')
 
-            newWso
+            thiz=this
+            newWso = null
             if type == 'amd'
-                ''
+#                require {async: false}, ['ttx/dijit/wso/Creation'], (Creation)->
+#                    alert(1)
+#                    newWso = new Creation(app: @app)
+                require {async: false}, [tid], (amdType)->
+                    newWso = new amdType(app: thiz.app)
+                    # 显示新的当前界面
+                    if thiz.useTab
+                        sameType = thiz.getWsoByType(item)
+                        if sameType.length > 0
+                            thiz.wsoContainer.selectChild sameType[0]
+                        else
+                            thiz.wsoContainer.addChild newWso
+                            thiz.wsoContainer.selectChild newWso
+                    else
+                        thiz.wsoContainer.destroyDescendants()
+                        thiz.wsoContainer.addChild newWso
+                    newWso.startup()
+
+                    thiz.wsoContainer.startup()
+
+                    # record the current state...
+                    lang.mixin current, {
+                        tid: tid
+                        oid: oid
+                        nid: nid
+                        form: newWso # todo 当前对象的重新定义
+                    }
+                    # destroy the old current object...
+                    thiz.destroy()
             else if type == 'bill'
                 defDeferred = @app.wsoDefinitionsManager.getBill tid
                 newWso = new WsoBill(
@@ -74,8 +103,32 @@ define [
                     closable: true
                     navigatorItem: item
                     title: item.name
-                    app:@app
+                    app: @app
                 )
+                # 显示新的当前界面
+                if @useTab
+                    sameType = @getWsoByType(item)
+                    if sameType.length > 0
+                        @wsoContainer.selectChild sameType[0]
+                    else
+                        @wsoContainer.addChild newWso
+                        @wsoContainer.selectChild newWso
+                else
+                    @wsoContainer.destroyDescendants()
+                    @wsoContainer.addChild newWso
+                newWso.startup()
+
+                @wsoContainer.startup()
+
+                # record the current state...
+                lang.mixin current, {
+                    tid: tid
+                    oid: oid
+                    nid: nid
+                    form: newWso # todo 当前对象的重新定义
+                }
+                # destroy the old current object...
+                @destroy()
             else if type == 'wso'
                 ''
             else
@@ -83,28 +136,6 @@ define [
             # destroy the old current object...
             @destroy()
 
-            # 显示新的当前界面
-            if @useTab
-                sameType = @getWsoByType(item)
-                if sameType.length > 0
-                    @wsoContainer.selectChild sameType[0]
-                else
-                    @wsoContainer.addChild newWso
-                    @wsoContainer.selectChild newWso
-            else
-                @wsoContainer.destroyDescendants()
-                @wsoContainer.addChild newWso
-            newWso.startup()
-
-            @wsoContainer.startup()
-
-            # record the current state...
-            lang.mixin current, {
-                tid: tid
-                oid: oid
-                nid: nid
-                form: newWso # todo 当前对象的重新定义
-            }
 
         destroy: ->
             # todo to delete
