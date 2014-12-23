@@ -36,12 +36,15 @@ define [
 
         getJson: (type)->
             request(dataServer + type, {handleAs: 'json'})
+        get: (type)->
+            request(server + type, {handleAs: 'json'})
 
         getWsoDefinition: (tid)->
             request(dataServer + 'wsoDefinition/' + tid, {handleAs: 'json'})
         getBillDefinition: (tid)->
             request(dataServer + 'billDefinition/' + tid, {handleAs: 'json'})
 
-        get: (type, oid)->
-            # 返回一个Deferred
-            @service.call tid: type, oid: oid
+
+#        get: (type, oid)->
+#            # 返回一个Deferred
+#            @service.call tid: type, oid: oid

@@ -475,18 +475,19 @@ define [
             actionJs = wsoDef.actionJsModule
             if wsoDef.list
                 listDef = wsoDef.list
+                thiz=this
                 if actionJs && actionJs.length > 0
                     require actionJs, (ajs)->
-                        @currentActionSet = new ajs wso: thiz
+                        thiz.currentActionSet = new ajs wso: thiz
                 else
                     @currentActionSet = @globalActionSet
 
                 # 查询条件
                 formQuery = @queryForm = new Form()
                 queryModel = @queryModel = getStateful {code: 'code', name: 'name', hintCode: 'hintcode'}
-                ctrlQuery = @queryCtrl = new ModelRefController model: queryModel
+                queryCtrl = @queryCtrl = new ModelRefController model: queryModel
                 @cpList.addChild formQuery
-                @_addTtxFieldSet(listDef.queryFields, ctrlQuery, formQuery.domNode, listDef.columns || 2)
+                @_addTtxFieldSet(listDef.queryFields, queryCtrl, formQuery.domNode, listDef.columns || 2)
 
                 # 查询按钮
                 queryActions = domConstruct.create 'div', {}, formQuery.domNode

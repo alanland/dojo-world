@@ -7,7 +7,7 @@ define [
     lang.mixin util, {
         setDefaults: (args, defaults)->
             for p of defaults
-                continue if empti[p] && `empty[p] == defaults[p]`
+                continue if empty[p] && `empty[p] == defaults[p]`
                 if args[p] is undefined
                     args[p] = lang.clone(defaults[p])
                 else if dojo.isObject defaults[p]

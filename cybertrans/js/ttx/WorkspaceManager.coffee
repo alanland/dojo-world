@@ -57,13 +57,12 @@ define [
             tid = item['tid']
             oid = item['nid']
             nid = item['nid']
-            current = @current
-            return if current.tid = tid && current.oid = oid
+            return if @current.tid = tid && @current.oid = oid
 
             # TODO: search for non-current, but loaded object
             #            if tid.startsWith('amd')
 
-            thiz=this
+            thiz = this
             newWso = null
             if type == 'amd'
 #                require {async: false}, ['ttx/dijit/wso/Creation'], (Creation)->
@@ -71,30 +70,6 @@ define [
 #                    newWso = new Creation(app: @app)
                 require {async: false}, [tid], (amdType)->
                     newWso = new amdType(app: thiz.app)
-                    # 显示新的当前界面
-                    if thiz.useTab
-                        sameType = thiz.getWsoByType(item)
-                        if sameType.length > 0
-                            thiz.wsoContainer.selectChild sameType[0]
-                        else
-                            thiz.wsoContainer.addChild newWso
-                            thiz.wsoContainer.selectChild newWso
-                    else
-                        thiz.wsoContainer.destroyDescendants()
-                        thiz.wsoContainer.addChild newWso
-                    newWso.startup()
-
-                    thiz.wsoContainer.startup()
-
-                    # record the current state...
-                    lang.mixin current, {
-                        tid: tid
-                        oid: oid
-                        nid: nid
-                        form: newWso # todo 当前对象的重新定义
-                    }
-                    # destroy the old current object...
-                    thiz.destroy()
             else if type == 'bill'
                 defDeferred = @app.wsoDefinitionsManager.getBill tid
                 newWso = new WsoBill(
@@ -105,47 +80,56 @@ define [
                     title: item.name
                     app: @app
                 )
-                # 显示新的当前界面
-                if @useTab
-                    sameType = @getWsoByType(item)
-                    if sameType.length > 0
-                        @wsoContainer.selectChild sameType[0]
-                    else
-                        @wsoContainer.addChild newWso
-                        @wsoContainer.selectChild newWso
-                else
-                    @wsoContainer.destroyDescendants()
-                    @wsoContainer.addChild newWso
-                newWso.startup()
-
-                @wsoContainer.startup()
-
-                # record the current state...
-                lang.mixin current, {
-                    tid: tid
-                    oid: oid
-                    nid: nid
-                    form: newWso # todo 当前对象的重新定义
-                }
-                # destroy the old current object...
-                @destroy()
             else if type == 'wso'
                 ''
             else
                 ''
-            # destroy the old current object...
-            @destroy()
+            # 显示新的当前界面
+            if @useTab
+                sameType = @getWsoByType(item)
+                if sameType.length > 0
+                    @wsoContainer.selectChild sameType[0]
+                else
+                    @wsoContainer.addChild newWso
+                    @wsoContainer.selectChild newWso
+            else
+                @destroyCurrent()
+                @wsoContainer.addChild newWso
+            newWso.startup()
+
+            @wsoContainer.startup()
+
+            # record the current state...
+            lang.mixin @current, {
+                tid: tid
+                oid: oid
+                nid: nid
+                form: newWso # todo 当前对象的重新定义
+            }
+    # destroy the old current object...
+#            @destroy()
+
+
+        destroyCurrent: ->
+            # destroyDescendants
+            # destroyRecursive
+            if not @useTab && @current.form
+                @wsoContainer.removeChild @current.form
+                @current.form.destroyDescendants()
+                delete @current.form
+#            current = @current = {}
 
 
         destroy: ->
+            ''
             # todo to delete
-#            current = @current
-#            if not @usetab
-#                if current.form
-#          @tabContainer.removeChild current.form
-#        else
-#                    main.appContainer.removeChild current.form
-#                    current.form.destroyRecursive()
+            #            current = @current
+            #            if not @usetab
+            #                if current.form
+            #          @tabContainer.removeChild current.form
+            #        else
+            #                    main.appContainer.removeChild current.form
+            #                    current.form.destroyRecursive()
             current = nullObjectValue
 
 
