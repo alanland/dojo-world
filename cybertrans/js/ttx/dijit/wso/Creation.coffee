@@ -1,6 +1,8 @@
 define [
     'dojo/_base/declare'
+    'dojo/_base/array'
     'dojo/_base/lang'
+    'dojo/_base/Deferred'
     'dojo/dom-construct'
     'dojo/aspect'
     'dojo/on'
@@ -8,7 +10,14 @@ define [
     'dijit/_WidgetBase'
     'dijit/_TemplatedMixin'
     'dijit/_WidgetsInTemplateMixin'
+    'dijit/Toolbar'
+    'dijit/TooltipDialog'
+    'dijit/ConfirmTooltipDialog'
+    'dijit/form/Form'
+    'dijit/form/Button'
     'dijit/form/TextBox'
+    'dijit/form/FilteringSelect'
+    'dijit/form/DropDownButton'
     'dijit/layout/ContentPane'
     'dijit/layout/TabContainer'
     'dojo/text!./templates/Creation.html'
@@ -17,8 +26,11 @@ define [
     'dojox/mvc/ModelRefController'
     'gridx/allModules'
     'ttx/dijit/_TtxForm'
-], (declare, lang, domConstruct, aspect, onn, Memory,
-    _WidgetBase, _TemplatedMixin, _WidgetsInTemplateMixin, TextBox, ContentPane, TabContainer, template,
+], (declare, array, lang, Deferred, domConstruct, aspect, onn, Memory,
+    _WidgetBase, _TemplatedMixin, _WidgetsInTemplateMixin,
+    Toolbar, TooltipDialog, ConfirmTooltipDialog,
+    Form, Button, TextBox, FilteringSelect, DropDownButton,
+    ContentPane, TabContainer, template,
     at, getStateful, ModelRefController,
     modules,
     _TtxForm)->
@@ -29,36 +41,36 @@ define [
         actionSets: null
 
         cpTableModel: null
-        tableModelModel: null
-        tableModelCtrl: null
-        tableModelFieldMap: {}
 
         cpBillModel: null
-        BillModelModel: null
-        BillModelCtrl: null
+        billModelCtrl: null
+        billModelFieldMap: {}
 
         templateString: template
 
         constructor: (args)->
             @inherited arguments
             @app = args.app
-            thiz=this
+            thiz = this
             require {async: false}, ['ttx/command/actions/CreationActionSet'], (ajs)->
-                defaultSet = new ajs()
+                defaultSet = new ajs(wso: thiz)
                 thiz.actionSets = {
                     default: defaultSet
                     global: defaultSet
                 }
-
 
         buildRendering: ->
             @inherited arguments
 
         postCreate: ->
             @inherited arguments
-
-            @
-            @_initTableModel()
+            thiz = this
+            @app.dataManager.getBillDefinition('Creation').then(
+                (res)->
+                    thiz._buildForm(res)
+                (err)->
+                    ''
+            )
             aspect.after @tc, 'layout', lang.hitch(this, this._layoutTc)
 
         layout: ->
@@ -69,109 +81,126 @@ define [
             @layoutFieldSetsPane(@cpTableModel.domNode)
             @layoutFieldSetsPane(@cpBillModel.domNode)
 
-        _initTableModel: ->
+        _buildForm: (billDef)->
+            @_initTableModel(billDef.tableModel)
+            @layout()
+
+        _initTableModel: (tableModelDef)->
             cp = @cpTableModel
             app = @app
-            model = @tableModelModel = getStateful {}
-            ctrl = @tableModelCtrl = new ModelRefController model: model
-            defs = [
-                {"id": "key", "type": "string", "field": "key", "name": "Key"},
-                {
-                    "id": "tableName", "type": "filteringSelect", "field": "tableName", "name": "Table Name",
-                    "layout": {"wrap": true},
-                    "args": {"url": "/rest/creation/tables", "searchAttr": "id"}
-                },
-                {
-                    "id": "description", "type": "string", "field": "description", "name": "Description",
-                    "layout": {"wrap": true}
-                },
-                {
-                    "id": "idColumnName", "type": "filteringSelect", "field": "idColumnName", "name": "ID Column",
-                    "layout": {"wrap": true}
-                    "args": {"searchAttr": "field", "labelAttr": "name"}
-                }
-            ]
-            fieldMap = @tableModelFieldMap
-            @addTtxFieldSet(defs, ctrl, 2, cp.domNode, fieldMap)
-            # 表改变的时候，刷新 idColumnName
-            aspect.after @tableModelFieldMap['tableName'], 'onChange', (value)->
+            ctrl = cp.ctrl = new ModelRefController model: getStateful {}
+            fieldMap = cp.fieldMap = {}
+
+            tableModelSelectDom = domConstruct.create 'div', {}, cp.domNode
+            domConstruct.create 'div', {innerHTML: 'Table Model', style: 'width:80px;display:inline-block'}, tableModelSelectDom
+            tableModelSelect = new FilteringSelect(
+                searchAttr: 'key'
+                disabled: true
+                onChange: (value)->
+                    console.log value
+            )
+            domConstruct.place tableModelSelect.domNode, tableModelSelectDom
+            tableModelSelect.startup()
+            app.dataManager.get('/rest/creation/tableModels').then(
+                (res)->
+                    tableModelSelect.set('disabled', false)
+                    tableModelSelect.set('store', new Memory(data: res, idProperty: 'key'))
+            )
+
+            actionsDom = domConstruct.create 'div', {}, cp.domNode
+            # 新增按钮
+            createBtn = new Button(label: 'Create', onClick: lang.hitch @actionSets.default, 'tableModelCreate')
+            domConstruct.place createBtn.domNode, actionsDom
+
+            # 保存按钮
+            saveButton = new Button(label: 'Save', onClick: lang.hitch @actionSets.default, 'tableModelCreate')
+            domConstruct.place saveButton.domNode, actionsDom
+
+            # form
+            form = cp.form = new Form()
+            domConstruct.place form.domNode, cp.domNode
+            @addTtxFieldSet(tableModelDef.fields, ctrl, 2, form.domNode, fieldMap)
+
+            # grid
+            gridDef = tableModelDef.grid
+
+            # 字段数据　后面请求后更新
+            fieldData = []
+
+            # 列表
+            listDiv = domConstruct.create 'div', {class: 'listGridContainer'}, cp.domNode
+            # 列表工具栏
+            listToolbar = new Toolbar {}
+            tipCp = new ContentPane()
+            tip = new ConfirmTooltipDialog({
+                content: tipCp
+            })
+            ctrl = new ModelRefController model: getStateful {}
+
+            row = @addTtxFieldRow(2, tipCp.domNode)
+            domConstruct.create 'div', {innerHTML: 'Column', style: 'display:inline-block; width:50px'}, row
+            tipFilterSelect = new FilteringSelect(value: at(ctrl, 'field'), store: new Memory(data: fieldData))
+            tipFilterSelect.startup()
+            domConstruct.place tipFilterSelect.domNode, row
+
+            row = @addTtxFieldRow(2, tipCp.domNode)
+            domConstruct.create 'div', {innerHTML: 'Name', style: 'display:inline-block; width:50px'}, row
+            input = new TextBox(value: at(ctrl, 'name'))
+            input.startup()
+            domConstruct.place input.domNode, row
+
+            # 新增确定事件
+            tip.onExecute = ->
+                id = ctrl.model['id']
+                item = lang.mixin({}, new Memory(data: fieldData).get(ctrl.get('field')))
+                if ctrl.get('name')
+                    item.name = ctrl.get('name')
+                Deferred.when(grid.store.add(
+                        lang.mixin(item, id: Math.random())
+                    ), ->
+                    console.log("A new item is saved to server");
+                )
+                window.ctrl = ctrl
+
+            listToolbar.addChild(new DropDownButton(
+                label: 'New'
+                dropDown: tip,
+                "iconClass": "dijitEditorIcon dijitEditorIconCopy"
+            ))
+
+            for adef in gridDef.actions
+                listToolbar.addChild @newTtxAction(adef)
+            # 列表Grid
+            grid = @addGridx(listDiv, new Memory(data: []), gridDef.structure, {
+                barTop: [{content: '<h1>' + gridDef.name || '' + ' </h1>'}, listToolbar],
+                modules: [
+                    modules.MoveRow,
+                    modules.DndRow,
+                    modules.CellWidget,
+                    modules.Edit
+                ]
+            })
+
+            cp.grid = grid
+
+            aspect.after cp.fieldMap['tableName'], 'onChange', (value)->
+                # 表改变的时候，刷新 idColumnName
                 app.dataManager.get("rest/creation/tables/#{value}/fields").then(
                     (res)->
+                        fieldData = res
                         # {id:0.19843485040876674, field:version, name:version, type:integer}
                         field = fieldMap['idColumnName']
                         field.set('store', new Memory(idProperty: "field", data: res))
                         field.set 'value', field.get('value')
+                        tipFilterSelect.set('store', new Memory(data: fieldData))
+
+                        # 改变表的时候，更新表格数据
+                        grid.setStore(new Memory(data: fieldData.concat()))
+
                     (err)->
                         console.error err
                 )
             , true
-
-            # grid
-            gridDef = {
-                "name": "表模型字段",
-                "actions": [
-                    {
-                        "id": "newDetail", "action": "", "name": "New Detail",
-                        "args": {"showLabel": true, "iconClass": "dijitEditorIcon dijitEditorIconCopy"}
-                    },
-                    {
-                        "id": "editDetail", "action": "", "name": "Edit Detail",
-                        "args": {"showLabel": true, "iconClass": "dijitEditorIcon dijitEditorIconWikiword"}
-                    },
-                    {
-                        "id": "deleteDetail", "action": "", "name": "Delete Detail",
-                        "args": {"showLabel": true, "iconClass": "dijitEditorIcon dijitEditorIconDelete"}
-                    },
-                    {
-                        "id": "deleteDetail", "action": "", "name": "drop down 1",
-                        "args": {"showLabel": true, "iconClass": "dijitEditorIcon dijitEditorIconDelete"},
-                        "dropDown": [
-                            {
-                                "id": "newDetail1", "action": "", "name": "some button1",
-                                "args": {"showLabel": true, "iconClass": "dijitEditorIcon dijitEditorIconCopy"}
-                            },
-                            {
-                                "id": "newDetail2", "action": "", "name": "some button2",
-                                "args": {"showLabel": true, "iconClass": "dijitEditorIcon dijitEditorIconCopy"}
-                            },
-                            {
-                                "id": "newDetail3", "action": "", "name": "some button3",
-                                "args": {"showLabel": true, "iconClass": "dijitEditorIcon dijitEditorIconCopy"}
-                            }
-                        ]
-                    },
-                    {
-                        "id": "deleteDetail", "action": "test", "name": "drop down 2",
-                        "args": {"showLabel": true, "iconClass": "dijitEditorIcon dijitEditorIconDelete"},
-                        "dropDown": [
-                            {
-                                "id": "newDetail1", "action": "", "name": "some button1",
-                                "args": {"showLabel": true, "iconClass": "dijitEditorIcon dijitEditorIconCopy"}
-                            },
-                            {
-                                "id": "newDetail2", "action": "", "name": "some button2",
-                                "args": {"showLabel": true, "iconClass": "dijitEditorIcon dijitEditorIconCopy"}
-                            },
-                            {
-                                "id": "newDetail3", "action": "", "name": "some button3",
-                                "args": {"showLabel": true, "iconClass": "dijitEditorIcon dijitEditorIconCopy"}
-                            }
-                        ]
-                    }
-                ],
-                "structure": [
-                    {"id": "id", "field": "id", "name": "ID", "width": "30px"},
-                    {"id": "material", "field": "material", "name": "Material", "width": "50px"},
-                    {"id": "spec", "field": "spec", "name": "Spec"},
-                    {"id": "qty", "field": "qty", "name": "Quantity", "width": "80px"}
-                ]
-            }
-            @addTtxGrid(gridDef, cp.domNode, {
-                modules: [
-                    modules.MoveRow,
-                    modules.DndRow,
-                ]
-            })
 
 
     }

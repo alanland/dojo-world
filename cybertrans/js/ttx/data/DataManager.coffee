@@ -44,6 +44,30 @@ define [
         getBillDefinition: (tid)->
             request(dataServer + 'billDefinition/' + tid, {handleAs: 'json'})
 
+        get: (url)->
+            request(server + url, {handleAs: 'json'})
+        post: (url, data, options = {})->
+            request(server + url, lang.mixin({
+                handleAs: 'json'
+                method: 'post'
+                data: JSON.stringify(data)
+                headers: {'Content-Type': 'application/json'}
+            }, options))
+        put: (url, data, options = {})->
+            request(server + url, lang.mixin({
+                handleAs: 'json'
+                method: 'put'
+                data: JSON.stringify(data)
+                headers: {'Content-Type': 'application/json'}
+            }, options))
+        delete: (url, data, options = {})->
+            request(server + url, lang.mixin({
+                handleAs: 'json'
+                method: 'delete'
+                data: JSON.stringify(data)
+                headers: {'Content-Type': 'application/json'}
+            }, options))
+
 
 #        get: (type, oid)->
 #            # 返回一个Deferred

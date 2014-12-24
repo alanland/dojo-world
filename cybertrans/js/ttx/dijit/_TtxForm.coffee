@@ -68,7 +68,6 @@ define [
                 'ttx-field-span': span
             }
             # todo type
-            domConstruct.create 'label', {innerHTML: def.name}, fieldDiv
             field = null
             switch def.type
                 when 'string' then field = new TextBox(name: def.field, value: at(ctrl, def.field))
@@ -89,13 +88,14 @@ define [
                 else
                     throw new Error('未实现的空空间类型' + def.type)
 
-
+            # todo for
+            domConstruct.create 'label', {innerHTML: def.name, for: field}, fieldDiv
             fieldMap[def.id] = field
             field.startup()
             domConstruct.place field.domNode, fieldDiv
             fieldDiv
 
-        addTtxFiled: (def, ctrl, span, domNode)->
+        addTtxField: (def, ctrl, span, domNode)->
             domConstruct.place @newTtxField(def, ctrl, span), domNode
 
         newTtxAction: (def)->
@@ -116,7 +116,7 @@ define [
             else
                 btn = new Button widgetArgs
                 if def.action  # 如果有配置动作
-                    @_addActionAction def, btn
+                    @_addActionClick def, btn
             btn
 
         _addActionClick: (def, btn)->
@@ -159,8 +159,8 @@ define [
                 modules.RowHeader,
                 modules.IndirectSelect,
                 modules.ExtendedSelectRow,
-#                    modules.MoveRow,
-#                    modules.DndRow,
+#                modules.MoveRow,
+#                modules.DndRow,
                 modules.VirtualVScroller
                 modules.SingleSort,
                 modules.ColumnResizer,
@@ -169,7 +169,7 @@ define [
                 modules.PaginationBar
             ]
             if args.modules
-                for m in modules
+                for m in args.modules
                     defaultModules.push m
                 args.modules = defaultModules
             g = new Grid(lang.mixin({
