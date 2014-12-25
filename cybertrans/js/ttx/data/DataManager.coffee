@@ -44,8 +44,8 @@ define [
         getBillDefinition: (tid)->
             request(dataServer + 'billDefinition/' + tid, {handleAs: 'json'})
 
-        get: (url)->
-            request(server + url, {handleAs: 'json'})
+        get: (url, options={})->
+            request(server + url, lang.mixin({handleAs: 'json'},options))
         post: (url, data, options = {})->
             request(server + url, lang.mixin({
                 handleAs: 'json'
