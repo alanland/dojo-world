@@ -55,6 +55,12 @@ define [
             '' #todo
         resetDetail: ->
             '' # todo
+        gridAddRow: (grid)->
+            grid.store.add({
+            })
+        gridDeleteRow: (grid)->
+            for id in grid.select.row.getSelected()
+                grid.store.remove(id)
 
 
     }

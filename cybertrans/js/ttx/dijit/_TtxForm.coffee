@@ -7,6 +7,7 @@ define [
     'dojo/request'
     'dojo/store/Memory'
     'dojo/store/JsonRest'
+    'dijit/TitlePane'
     'dijit/Toolbar'
     'dijit/Menu'
     'dijit/MenuItem'
@@ -24,13 +25,18 @@ define [
     'ttx/util'
 ], (declare, lang, domConstruct, domGeometry, query, request,
     Memory, JsonRest,
-    Toolbar, Menu, MenuItem,
+    TitlePane, Toolbar, Menu, MenuItem,
     Button, DropDownButton, ComboButton, TextBox, FilteringSelect,
     at, getStateful, ModelRefController,
     Grid, Cache, modules,
     util)->
     declare null, {
         actionSets: {default: {}, global: {}}
+
+        addTitlePane: (title, domNode)->
+            pane = new TitlePane(title: title)
+            domConstruct.place pane.domNode, domNode
+            pane
 
         newTtxFieldSet: (defs, ctrl, columns, fieldMap = {})->
             row = null # row 定义
@@ -98,7 +104,7 @@ define [
         addTtxField: (def, ctrl, span, domNode)->
             domConstruct.place @newTtxField(def, ctrl, span), domNode
 
-        newTtxAction: (def)->
+        newTtxAction: (def, actionMap = {}, args)->
             # def:
             #   {"id": "query", "action": "query", "name": "Query"}
             # actionSets:
@@ -110,35 +116,63 @@ define [
                 widgetArgs = lang.mixin(widgetArgs, {dropDown: menu})
                 if def.action
                     btn = new ComboButton widgetArgs
-                    @_addActionClick def, btn
+                    @_addActionClick def, btn, args
                 else
                     btn = new DropDownButton widgetArgs
             else
                 btn = new Button widgetArgs
                 if def.action  # 如果有配置动作
-                    @_addActionClick def, btn
+                    @_addActionClick def, btn, args
+            actionMap[def.id] = btn
             btn
 
-        _addActionClick: (def, btn)->
+        addTtxAction: (def, domNode, actionMap = {})->
+            domConstruct.place @newTtxAction(def, actionMap).domNode, domNode
+
+        newTtxActionSet: (defs, actionMap)->
+            dom = domConstruct.create 'div', {}
+            for def in defs
+                @addTtxAction def, dom, actionMap
+            dom
+
+        addTtxActionSet: (defs, domNode, actionMap)->
+            domConstruct.place @newTtxActionSet(defs, actionMap), domNode
+
+        _addActionClick: (def, btn, args)->
             if not def.action
                 btn.onClick = ->
                     console.error '未配置Action'
                     console.log def
                 return ''
             idx = def.action.indexOf(':')
+            act = def.action.substr(idx + 1)
             # [action] default
             # [:action] global
             # [some.model:action] custom
             actionSets = @actionSets
             if idx < 0 # global
-                if actionSets.global[def.action]
-                    btn.onClick = lang.hitch actionSets.global, def.action
+                if actionSets.default[act]
+                    btn.onClick = lang.hitch actionSets.default, act, args
                 else
                     console.error '配置的 Action 不存在'
-                    console.log def
-            else if idx == 0 # default module
-                ''
+                    console.error def
+            else if idx == 0 # global module
+                if actionSets.global[act]
+                    btn.onClick = lang.hitch actionSets.global, act, args
+                else
+                    console.error '配置的 Action 不存在'
+                    console.error def
             else # module need amd
+                thiz = this
+                request [def.action.substr(0, idx)], (ajs)->
+                    # todo 是否可能产生内存泄漏
+                    acs = new ajs(wso: thiz.wso) # customize action set
+                    if acs[act]
+                        btn.onClick = lang.hitch acs, act, args
+                    else
+                        console.error '配置的 Action 不存在'
+                        console.error def
+
 
         _newDropDownMenu: (actionsDef)->
             menu = new Menu()
@@ -149,9 +183,6 @@ define [
                 menu.addChild item
             menu.startup()
             menu
-
-        addTtxAction: (def, domNode)->
-            domConstruct.place @newAction(def).domNode, domNode
 
         addGridx: (container, store, structure, args)->
             defaultModules = [
@@ -191,12 +222,14 @@ define [
             listDiv = domConstruct.create 'div', {class: 'listGridContainer'}, domNode
             # 列表工具栏
             listToolbar = new Toolbar {}
-            for adef in def.actions
-                listToolbar.addChild @newTtxAction(adef)
             # 列表Grid
             grid = @addGridx(listDiv, new Memory(data: []), def.structure, lang.mixin({
                 barTop: [{content: '<h1>' + def.name || '' + ' </h1>'}, listToolbar]
             }, args))
+
+            if def.actions
+                for adef in def.actions
+                    listToolbar.addChild @newTtxAction(adef, {}, grid)
             grid
 
         layoutFieldSetsPane: (pane)->

@@ -2,24 +2,20 @@
     <div data-dojo-attach-point="tc" data-dojo-type="dijit/layout/TabContainer"
          data-dojo-props='style:"width: 100%; height: 100%;",  tabPosition: "left-h", doLayout: true'>
         <div data-dojo-attach-point="cpTableModel" data-dojo-type="dijit/layout/ContentPane"
-             data-dojo-props='title:"表模型维护", style:"width: 100%; height: 500px;"'>
+             data-dojo-props='title:"表模模型维护", style:"width: 100%; height: 500px;"'>
             <h2 style="text-align:center">表模型维护</h2>
         </div>
         <div data-dojo-attach-point="cpBillModel" data-dojo-type="dijit/layout/ContentPane"
-             data-dojo-props='title:"单据模型维护", selected:true, closable:false, style:"width: 100%; height: 500px;"'>
-            <h2 style="text-align:center">单据型维护</h2>
+             data-dojo-props='title:"单据模型维护", closable:false, style:"width: 100%; height: 500px;"'>
+            <h2 style="text-align:center">单据模型维护</h2>
         </div>
-        <div data-dojo-attach-point="cpQuery" data-dojo-type="dijit/layout/ContentPane"
-             data-dojo-props='title:"查询条件及列表", style:"width: 100%; height: 100%;"'>
-            Lorem ipsum and all around - last...
+        <div data-dojo-attach-point="cpViewModel" data-dojo-type="dijit/layout/ContentPane"
+             data-dojo-props='title:"界面模型维护", selected:true, closable:false, style:"width: 100%; height: 500px;"'>
+            <h2 style="text-align:center">界面模型维护</h2>
+            <div data-dojo-attach-point="cpViewModelForm" data-dojo-type="dijit/form/Form"></div>
         </div>
-        <div data-dojo-attach-point="cpBill" data-dojo-type="dijit/layout/ContentPane"
-             data-dojo-props='title:"单据编辑及明细", style:"width: 100%; height: 100%;"'>
-            Lorem ipsum and all around - last...
-        </div>
-        <div data-dojo-attach-point="cpDetail" data-dojo-type="dijit/layout/ContentPane"
-             data-dojo-props='title:"明细编辑", style:"width: 100%; height: 100%;"'>
-            Lorem ipsum and all around - last...
+        <div data-dojo-attach-point="cpNavigator" data-dojo-type="dijit/layout/ContentPane"
+             data-dojo-props='title:"菜单维护", style:"width: 100%; height: 500px;"'>
         </div>
     </div>
 </div>

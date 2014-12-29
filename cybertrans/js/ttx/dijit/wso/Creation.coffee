@@ -12,6 +12,7 @@ define [
     'dijit/_WidgetBase'
     'dijit/_TemplatedMixin'
     'dijit/_WidgetsInTemplateMixin'
+    'dijit/TitlePane'
     'dijit/Toolbar'
     'dijit/TooltipDialog'
     'dijit/ConfirmTooltipDialog'
@@ -31,7 +32,7 @@ define [
 ], (declare, array, lang, Deferred,
     DeferredList, domConstruct, domGeometry, aspect, onn, Memory,
     _WidgetBase, _TemplatedMixin, _WidgetsInTemplateMixin,
-    Toolbar, TooltipDialog, ConfirmTooltipDialog,
+    TitlePane, Toolbar, TooltipDialog, ConfirmTooltipDialog,
     Form, Button, TextBox, FilteringSelect, DropDownButton,
     ContentPane, TabContainer, template,
     at, getStateful, ModelRefController,
@@ -44,39 +45,44 @@ define [
         actionSets: null
 
         cpTableModel: null
-
         cpBillModel: null
+        cpViewModel: null
 
         templateString: template
 
         dataCache: {
             billStore: {}
             tableStore: {}
+            viewStore: {}
         }
 
         constructor: (args)->
             @inherited arguments
             @app = args.app
             thiz = this
-            require {async: false}, ['ttx/command/actions/CreationActionSet'], (ajs)->
+            require {async: false}, [
+                    'ttx/command/actions/CreationActionSet',
+                    'ttx/command/actions/BillActionSet'
+                ], (ajs, global)->
                 defaultSet = new ajs(wso: thiz)
+                globalSet = new global(wso: thiz)
                 thiz.actionSets = {
                     default: defaultSet
-                    global: defaultSet
+                    global: globalSet
                 }
 
         _buildCache: ->
-            dataCache = @dataCache
-            @_buildCacheTable(dataCache)
-            @_buildCacheBill(dataCache)
+            @_buildCacheTable(@dataCache)
+            @_buildCacheBill(@dataCache)
         _buildCacheTable: (res)->
             @dataCache.tableStore = new Memory(data: res, idProperty: 'key')
-            @cpBillModel.fieldMap['header'].set 'store', @dataCache.tableStore
-            @cpBillModel.fieldMap['detail'].set 'store', @dataCache.tableStore
+            if @cpBillModel.fieldMap
+                @cpBillModel.fieldMap['header'].set 'store', @dataCache.tableStore
+                @cpBillModel.fieldMap['detail'].set 'store', @dataCache.tableStore
         _buildCacheBill: (res)->
             @dataCache.billStore = new Memory(data: res, idProperty: 'key')
         _reBuildCacheTable: (dataCache)->
-            thiz=this
+            thiz = this
             @app.dataManager.get('/rest/creation/tableModels').then(
                 (res)->
                     thiz._buildCacheTable(res)
@@ -84,7 +90,7 @@ define [
                     console.error err
             )
         _reBuildCacheBill: (dataCache)->
-            thiz=this
+            thiz = this
             @app.dataManager.get('/rest/creation/billModels').then(
                 (res)->
                     thiz._buildCacheBill(res)
@@ -101,9 +107,9 @@ define [
                 @app.dataManager.get('/rest/creation/billModels')
             ]).then(
                 (res)->
-                    thiz._buildForm(res[0][1])
                     thiz._buildCacheTable res[1][1]
                     thiz._buildCacheBill res[2][1]
+                    thiz._buildForm(res[0][1])
                 (err)->
                     ''
             )
@@ -122,6 +128,8 @@ define [
         _buildForm: (billDef)->
             @_initTableModel(billDef.tableModel)
             @_initBillModel(billDef.billModel)
+            @_initViewModel(billDef.viewModel)
+            @startup()
             @layout()
 
         _initTableModel: (tableModelDef)->
@@ -135,9 +143,9 @@ define [
             fieldMap = cp.fieldMap = {}
 
             # 已保存的模型选择
-            tableModelSelectDom = domConstruct.create 'div', {}, cp.domNode
-            domConstruct.create 'div', {innerHTML: 'Table Model', style: 'width:80px;display:inline-block'}, tableModelSelectDom
-            tableModelSelect = cp.tableModelSelect = new FilteringSelect(
+            modelSelectDom = domConstruct.create 'div', {}, cp.domNode
+            domConstruct.create 'div', {innerHTML: 'Table Model', style: 'width:80px;display:inline-block'}, modelSelectDom
+            modelSelect = cp.modelSelect = new FilteringSelect(
                 searchAttr: 'key'
                 disabled: true
                 required: false
@@ -146,13 +154,13 @@ define [
                     showModel(item)
                     cp.fieldMap['key'].set 'disabled', value != ''
             )
-            domConstruct.place tableModelSelect.domNode, tableModelSelectDom
-            tableModelSelect.startup()
+            domConstruct.place modelSelect.domNode, modelSelectDom
+            modelSelect.startup()
             # 获取所有表模型
             app.dataManager.get('/rest/creation/tableModels').then(
                 (res)->
-                    tableModelSelect.set('disabled', false)
-                    tableModelSelect.set('store', new Memory(data: res, idProperty: 'key'))
+                    modelSelect.set('disabled', false)
+                    modelSelect.set('store', new Memory(data: res, idProperty: 'key'))
             )
 
             # 该变量用适应列表 tableName 异步获取下拉框之后 idColumnValue 的值没有设置上去的问题
@@ -256,8 +264,6 @@ define [
             })
 
             cp.grid = grid
-
-            window.fmap = cp.fieldMap
 
             # 选择表之后
             aspect.after cp.fieldMap['tableName'], 'onChange', (value)->
@@ -365,7 +371,10 @@ define [
             domConstruct.place form.domNode, cp.domNode
             @addTtxFieldSet billModelDef.fields, ctrl, 2, form.domNode, fieldMap
 
-            thiz=this
+            fieldMap['header'].set 'store', @dataCache.tableStore
+            fieldMap['detail'].set 'store', @dataCache.tableStore
+
+            thiz = this
             # 选择头表之后
             aspect.after fieldMap['header'], 'onChange', (value)->
                 # 表改变的时候，刷新 idColumnName
@@ -389,7 +398,110 @@ define [
                 if modelSelectChange.item.subordinate
                     fieldMap['subordinate'].set 'value', modelSelectChange.item.subordinate
                     modelSelectChange.item.subordinate = undefined
-            ,true
+            , true
+
+        _initViewModel: (viewModelDef)->
+            thiz = this
+            cp = @cpViewModel
+            app = @app
+            ctrl = cp.ctrl = new ModelRefController model: getStateful {}
+            fieldMap = cp.fieldMap = {}
+            actionMap = cp.actionMap = {}
+            dataCache = @dataCache
+
+            # 模型属性
+            form = cp.form = @cpViewModelForm
+            domConstruct.place form.domNode, cp.domNode
+            @addTtxFieldSet viewModelDef.viewFields, ctrl, 2, form.domNode, fieldMap
+
+            @addTtxActionSet viewModelDef.viewActions, cp.domNode, actionMap
+
+            # 三个tab页
+            tcViewModel = cp.tcViewModel = new TabContainer(nested: true)
+            cpList = cp.cpList = new ContentPane(title: 'list')
+            tcViewModel.addChild cpList
+            cpBill = cp.cpBill = new ContentPane(title: 'Bill')
+            tcViewModel.addChild cpBill
+            cpDetail = cp.cpDetail = new ContentPane(title: 'Detail')
+            tcViewModel.addChild cpDetail
+            domConstruct.place tcViewModel.domNode, cp.domNode
+
+            aspect.after tcViewModel, 'selectChild', lang.hitch(this, this._layoutTc)
+
+            # 表单界面定义
+            @_initViewModel_List(viewModelDef.list)
+            @_initViewModel_Bill(viewModelDef.bill)
+            @_initViewModel_Detail(viewModelDef.detail)
+            tcViewModel.startup()
+
+
+            # 下拉框
+            fieldMap['bill'].set 'labelAttr', 'key'
+            fieldMap['bill'].set 'searchAttr', 'key'
+            fieldMap['bill'].set 'store', @dataCache.billStore
+
+            # deal data
+
+            billData = @dataCache.billStore.get(ctrl.get 'bill' || '')
+            headerData = @dataCache.tableStore.get billData?.header
+            detailData = @dataCache.tableStore.get billData?.detail
+            @__initViewModel_DealWithBill(billData, headerData, detailData)
+
+        _initViewModel_List: (listDef)->
+            cp = @cpViewModel.cpList
+            ctrl = cp.ctrl = new ModelRefController model: getStateful {columns: 2}
+            fieldMap = cp.fieldMap = {}
+            @addTtxFieldSet listDef.viewFields, cp.ctrl, 2, cp.domNode, fieldMap
+            cp.fieldsGrid = @addTtxGrid listDef.fields, @addTitlePane('查询字段', cp.domNode).containerNode, {
+                modules: [modules.CellWidget, modules.Edit]
+            }
+            cp.actionsGrid = @addTtxGrid listDef.actions, @addTitlePane('查询操作', cp.domNode).containerNode, {
+                modules: [modules.CellWidget, modules.Edit]
+            }
+            # grid
+            gridPane = cp.gridPane = @addTitlePane('查询界面列表', cp.domNode)
+            gridPane.ctrl = new ModelRefController model: getStateful {columns: 2}
+            @addTtxFieldSet listDef.grid.fields, gridPane.ctrl, 2, gridPane.containerNode, {}
+            gridPane.actionsGrid = @addTtxGrid listDef.grid.actions, gridPane.containerNode, {}
+            gridPane.structureGrid = @addTtxGrid listDef.grid.structure, gridPane.containerNode, {}
+
+
+        _initViewModel_Bill: (billDef)->
+            cp = @cpViewModel.cpBill
+            ctrl = cp.ctrl = new ModelRefController model: getStateful {columns: 2}
+            fieldMap = cp.fieldMap = {}
+
+            @addTtxFieldSet billDef.viewFields, cp.ctrl, 2, cp.domNode, fieldMap
+            @addTtxGrid billDef.actions, @addTitlePane('单据操作', cp.domNode).containerNode, {}
+            @addTtxGrid billDef.fields, @addTitlePane('单据字段', cp.domNode).containerNode, {}
+
+            # grid
+            gridPane = cp.gridPane = @addTitlePane('明细列表', cp.domNode)
+            gridPane.ctrl = new ModelRefController model: getStateful {columns: 2}
+            @addTtxFieldSet billDef.grid.fields, gridPane.ctrl, 2, gridPane.containerNode, {}
+            gridPane.actionsGrid = @addTtxGrid billDef.grid.actions, gridPane.containerNode, {}
+            gridPane.structureGrid = @addTtxGrid billDef.grid.structure, gridPane.containerNode, {}
+
+        _initViewModel_Detail: (detailDef)->
+            cp = @cpViewModel.cpDetail
+            ctrl = cp.ctrl = new ModelRefController model: getStateful {columns: 2}
+            fieldMap = cp.fieldMap = {}
+            @addTtxFieldSet detailDef.viewFields, cp.ctrl, 2, cp.domNode, fieldMap
+            cp.actionsGrid = @addTtxGrid detailDef.actions, @addTitlePane('明细操作', cp.domNode).containerNode, {}
+            cp.fieldsGrid = @addTtxGrid detailDef.fields, @addTitlePane('明细字段', cp.domNode).containerNode, {}
+
+        __initViewModel_DealWithBill: (billData, headerData, detailData)->
+            cp = cp = @cpViewModel
+            g = cp.cpList.fieldsGrid
+            # update structure
+
+            window.store = new Memory(data: [{id: 1, name: 11}])
+            structure = g.structure.concat()
+            #            structure[1].alwaysEditing = false
+#            structure[1].editor = FilteringSelect
+            structure[1].editorArgs = {"props": '{store: store, labelAttr: "id"}'}
+            g.setColumns structure
+            g.startup()
 
 
     }
