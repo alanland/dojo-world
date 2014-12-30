@@ -59,14 +59,14 @@ define [
         constructor: (args)->
             @inherited arguments
             @app = args.app
-            thiz = this
+            that = this
             require {async: false}, [
                     'ttx/command/actions/CreationActionSet',
                     'ttx/command/actions/BillActionSet'
                 ], (ajs, global)->
-                defaultSet = new ajs(wso: thiz)
-                globalSet = new global(wso: thiz)
-                thiz.actionSets = {
+                defaultSet = new ajs(wso: that)
+                globalSet = new global(wso: that)
+                that.actionSets = {
                     default: defaultSet
                     global: globalSet
                 }
@@ -82,34 +82,34 @@ define [
         _buildCacheBill: (res)->
             @dataCache.billStore = new Memory(data: res, idProperty: 'key')
         _reBuildCacheTable: (dataCache)->
-            thiz = this
+            that = this
             @app.dataManager.get('/rest/creation/tableModels').then(
                 (res)->
-                    thiz._buildCacheTable(res)
+                    that._buildCacheTable(res)
                 (err)->
                     console.error err
             )
         _reBuildCacheBill: (dataCache)->
-            thiz = this
+            that = this
             @app.dataManager.get('/rest/creation/billModels').then(
                 (res)->
-                    thiz._buildCacheBill(res)
+                    that._buildCacheBill(res)
                 (err)->
                     console.error err
             )
 
         postCreate: ->
             @inherited arguments
-            thiz = this
+            that = this
             new DeferredList([
                 @app.dataManager.getBillDefinition('Creation'),
                 @app.dataManager.get('/rest/creation/tableModels')
                 @app.dataManager.get('/rest/creation/billModels')
             ]).then(
                 (res)->
-                    thiz._buildCacheTable res[1][1]
-                    thiz._buildCacheBill res[2][1]
-                    thiz._buildForm(res[0][1])
+                    that._buildCacheTable res[1][1]
+                    that._buildCacheBill res[2][1]
+                    that._buildForm(res[0][1])
                 (err)->
                     ''
             )
@@ -358,7 +358,7 @@ define [
             fieldMap['header'].set 'store', @dataCache.tableStore
             fieldMap['detail'].set 'store', @dataCache.tableStore
 
-            thiz = this
+            that = this
             # 选择头表之后
             aspect.after fieldMap['header'], 'onChange', (value)->
                 # 表改变的时候，刷新 idColumnName
@@ -366,7 +366,7 @@ define [
                     fieldMap['principal'].set 'value', ''
                     return
 
-                table = thiz.dataCache.tableStore.get(cp.fieldMap['header'])
+                table = that.dataCache.tableStore.get(cp.fieldMap['header'])
                 fieldMap['principal'].set 'store', new Memory(idProperty: 'field', data: table.fields)
                 if modelSelectChange.item.principal
                     fieldMap['principal'].set 'value', modelSelectChange.item.principal
@@ -377,7 +377,7 @@ define [
                     fieldMap['subordinate'].set 'value', ''
                     return
 
-                table = thiz.dataCache.tableStore.get(cp.fieldMap['detail'])
+                table = that.dataCache.tableStore.get(cp.fieldMap['detail'])
                 fieldMap['subordinate'].set 'store', new Memory(idProperty: 'field', data: table.fields)
                 if modelSelectChange.item.subordinate
                     fieldMap['subordinate'].set 'value', modelSelectChange.item.subordinate
@@ -385,7 +385,7 @@ define [
             , true
 
         _initViewModel: (viewModelDef)->
-            thiz = this
+            that = this
             cp = @cpViewModel
             app = @app
             ctrl = cp.ctrl = new ModelRefController model: getStateful {}

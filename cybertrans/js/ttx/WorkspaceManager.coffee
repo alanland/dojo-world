@@ -29,12 +29,14 @@ define [
                         region: "center",
                         splitter: true,
                         tabPosition: "left-h"
+                        id: 'workspace'
                     )
                 else
                     @wsoContainer = new ContentPane(
                         style: 'width:100%; height:100%'
                         region: "center",
                         splitter: true
+                        id: 'workspace'
                     )
             @wsoContainer
 

@@ -42,6 +42,7 @@ define [
                         menu: mainMenu
                         region: 'top'
                         app:app
+                        id:'menu'
                     )
                     appContainer.addChild @menu
                 (err)->

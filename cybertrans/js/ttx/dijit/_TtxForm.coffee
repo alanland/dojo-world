@@ -171,10 +171,10 @@ define [
                     console.log '配置的 Action 不存在'
                     console.log def
             else # module need amd
-                thiz = this
+                that = this
                 request [def.action.substr(0, idx)], (ajs)->
                     # todo 是否可能产生内存泄漏
-                    acs = new ajs(wso: thiz.wso) # customize action set
+                    acs = new ajs(wso: that.wso) # customize action set
                     if acs[act]
                         btn.onClick = lang.hitch acs, act, args
                     else
