@@ -135,6 +135,7 @@ define [
         _initTableModel: (tableModelDef)->
             cp = @cpTableModel
             app = @app
+            cp.actionMap = {}
             ctrl = cp.ctrl = new ModelRefController model: getStateful {
                 'newBtn:disabled': false
                 'createBtn:disabled': false
@@ -172,33 +173,8 @@ define [
                 for k in ['key', 'description', 'tableName', 'idColumnName']
                     ctrl.set(k, item[k])
 
-
-            actionsDom = domConstruct.create 'div', {}, cp.domNode
-            # New
-            newBtn = new Button(
-                label: 'New',
-                disabled: at(ctrl, 'newBtn:disabled'),
-                onClick: lang.hitch @actionSets.default, 'tableModel_New'
-            )
-            newBtn.startup()
-            domConstruct.place newBtn.domNode, actionsDom
-
-            # 新增按钮
-            createBtn = new Button(
-                label: 'Create',
-                disabled: at(ctrl, 'createBtn:disabled')
-                onClick: lang.hitch @actionSets.default, 'tableModel_Create'
-            )
-            createBtn.startup()
-            domConstruct.place createBtn.domNode, actionsDom
-
-            # 保存按钮
-            updateButton = new Button(
-                label: 'Update',
-                disabled: at(ctrl, 'updateBtn:disabled')
-                onClick: lang.hitch @actionSets.default, 'tableModel_Update'
-            )
-            domConstruct.place updateButton.domNode, actionsDom
+            # actions
+            @addTtxActionSet(tableModelDef.actions, cp.domNode, cp.actionMap)
 
             # form
             form = cp.form = new Form()
@@ -215,11 +191,21 @@ define [
             listDiv = domConstruct.create 'div', {class: 'listGridContainer'}, cp.domNode
             # 列表工具栏
             listToolbar = new Toolbar {}
+
+            # tooltip
             tipCp = new ContentPane()
             tip = new ConfirmTooltipDialog({
                 content: tipCp
             })
+
             ctrlTip = new ModelRefController model: getStateful {}
+
+            row = @addTtxFieldRow(2, tipCp.domNode)
+            domConstruct.create 'div', {innerHTML: 'Id', style: 'display:inline-block; width:50px'}, row
+            input = new TextBox(value: at(ctrlTip, 'id'))
+            input.startup()
+            domConstruct.place input.domNode, row
+
             row = @addTtxFieldRow(2, tipCp.domNode)
             domConstruct.create 'div', {innerHTML: 'Column', style: 'display:inline-block; width:50px'}, row
             tipFilterSelect = new FilteringSelect(value: at(ctrlTip, 'field'), store: new Memory(data: fieldData))
@@ -238,16 +224,14 @@ define [
                 item = lang.mixin({}, new Memory(data: fieldData).get(ctrlTip.get('field')))
                 if ctrlTip.get('name')
                     item.name = ctrlTip.get('name')
-                Deferred.when(grid.store.add(
-                        lang.mixin(item, id: Math.random())
-                    ), ->
+                item.id = ctrlTip.get('id')
+                Deferred.when(grid.store.add(item), ->
                     console.log("A new item is saved to server");
                 )
 
             listToolbar.addChild(new DropDownButton(
                 label: 'New'
-                dropDown: tip,
-                "iconClass": "dijitEditorIcon dijitEditorIconCopy"
+                dropDown: tip
             ))
 
             for adef in gridDef.actions
@@ -407,7 +391,29 @@ define [
             ctrl = cp.ctrl = new ModelRefController model: getStateful {}
             fieldMap = cp.fieldMap = {}
             actionMap = cp.actionMap = {}
-            dataCache = @dataCache
+
+            # 已保存的模型选择
+            modelSelectDom = domConstruct.create 'div', {}, cp.domNode
+            domConstruct.create 'div', {innerHTML: 'View Model', style: 'width:80px;display:inline-block'}, modelSelectDom
+            modelSelect = cp.modelSelect = new FilteringSelect(
+                searchAttr: 'key'
+                disabled: true
+                required: false
+                onChange: (value)->
+                    item = @store.get(value)
+                    showModel(item)
+                    cp.fieldMap['key'].set 'disabled', value != ''
+            )
+            domConstruct.place modelSelect.domNode, modelSelectDom
+            modelSelect.startup()
+
+            # 获取所有表模型
+            app.dataManager.get('/rest/creation/viewModels').then(
+                (res)->
+                    modelSelect.set('disabled', false)
+                    modelSelect.set('store', new Memory(data: res, idProperty: 'key'))
+            )
+
 
             # 模型属性
             form = cp.form = @cpViewModelForm
@@ -416,9 +422,23 @@ define [
 
             @addTtxActionSet viewModelDef.viewActions, cp.domNode, actionMap
 
+
+            # 下拉框
+            fieldMap['bill'].set 'labelAttr', 'key'
+            fieldMap['bill'].set 'searchAttr', 'key'
+            fieldMap['bill'].set 'store', @dataCache.billStore
+            aspect.after fieldMap['bill'], 'onChange', lang.hitch(this, (value)->
+                cp.tcViewModel.destroyRecursive()
+                @_initViewTabContainer(cp, viewModelDef)
+            ), true
+
+            # 初始化页面节点
+            @_initViewTabContainer(cp, viewModelDef)
+
+        _initViewTabContainer: (cp, viewModelDef)->
             # 三个tab页
             tcViewModel = cp.tcViewModel = new TabContainer(nested: true)
-            cpList = cp.cpList = new ContentPane(title: 'list')
+            cpList = cp.cpList = new ContentPane(title: 'List')
             tcViewModel.addChild cpList
             cpBill = cp.cpBill = new ContentPane(title: 'Bill')
             tcViewModel.addChild cpBill
@@ -428,30 +448,28 @@ define [
 
             aspect.after tcViewModel, 'selectChild', lang.hitch(this, this._layoutTc)
 
+
+            # deal data
+            billData = @dataCache.billStore.get(cp.ctrl.get 'bill' || '')
+            headerData = @dataCache.tableStore.get billData?.header
+            detailData = @dataCache.tableStore.get billData?.detail
+
+
             # 表单界面定义
-            @_initViewModel_List(viewModelDef.list)
+            @_initViewModel_List(viewModelDef.list, billData, headerData, detailData)
             @_initViewModel_Bill(viewModelDef.bill)
             @_initViewModel_Detail(viewModelDef.detail)
             tcViewModel.startup()
 
-
-            # 下拉框
-            fieldMap['bill'].set 'labelAttr', 'key'
-            fieldMap['bill'].set 'searchAttr', 'key'
-            fieldMap['bill'].set 'store', @dataCache.billStore
-
-            # deal data
-
-            billData = @dataCache.billStore.get(ctrl.get 'bill' || '')
-            headerData = @dataCache.tableStore.get billData?.header
-            detailData = @dataCache.tableStore.get billData?.detail
             @__initViewModel_DealWithBill(billData, headerData, detailData)
 
-        _initViewModel_List: (listDef)->
+        _initViewModel_List: (listDef, billData, headerData, detailData)->
             cp = @cpViewModel.cpList
             ctrl = cp.ctrl = new ModelRefController model: getStateful {columns: 2}
             fieldMap = cp.fieldMap = {}
             @addTtxFieldSet listDef.viewFields, cp.ctrl, 2, cp.domNode, fieldMap
+
+            # 查询字段
             cp.fieldsGrid = @addTtxGrid listDef.fields, @addTitlePane('查询字段', cp.domNode).containerNode, {
                 modules: [modules.CellWidget, modules.Edit]
             }
@@ -465,6 +483,49 @@ define [
             gridPane.actionsGrid = @addTtxGrid listDef.grid.actions, gridPane.containerNode, {}
             gridPane.structureGrid = @addTtxGrid listDef.grid.structure, gridPane.containerNode, {}
 
+            return if not billData
+
+            #
+            # list 查询字段的新增 Tooltip
+            fdefs = [
+                {"id": "id", "type": "string", "field": "id", "name": "Id"},
+                {
+                    "id": "table", "type": "filteringSelect", "field": "table", "name": "Table",
+                    "args": {"searchAttr": "key", "labelAttr": "key"}
+                },
+                {"id": "field", "type": "filteringSelect", "field": "field", "name": "Field"},
+                {"id": "name", "type": "string", "field": "name", "name": "name"},
+                {"id": "type", "type": "string", "field": "type", "name": "type"},
+                {"id": "operator", "type": "string", "field": "operator", "name": "operator"},
+                {"id": "span", "type": "string", "field": "span", "name": "span"},
+                {"id": "wrap", "type": "string", "field": "wrap", "name": "wrap"},
+                {"id": "args", "type": "string", "field": "args", "name": "args"},
+            ]
+            tooltip = @newTooltip(fdefs, cp.fieldsGrid, {type: 'string', operator: '='})
+            cp.fieldsGrid.barTop[1].actionMap['new'].set 'dropDown', tooltip
+
+            # table 字段
+            data = [{key: headerData.key, item: headerData, value: headerData}]
+            data.push {key: detailData.key, value: detailData} if detailData
+            tipTable = tooltip.fieldMap['table'] # tip 中的 Table 字段
+            tipTable.set 'store', new Memory(data: data, idProperty: 'key')
+            aspect.after tipTable, 'onChange', ->
+                tooltip.fieldMap['field'].set 'store', new Memory(data: tipTable.item.value.fields)
+
+            #
+            # list 查询结构列表列的 tooltip
+            fdefs = [
+                {"id": "id", "type": "string", "field": "id", "name": "Id"},
+                {"id": "field", "type": "filteringSelect", "field": "field", "name": "Field"},
+                {"id": "name", "type": "string", "field": "name", "name": "name"}
+            ]
+            tooltip = @newTooltip(fdefs, gridPane.structureGrid)
+            gridPane.structureGrid.barTop[1].actionMap['new'].set 'dropDown', tooltip
+            tooltip.fieldMap['field'].set 'store', new Memory(data:headerData.fields)
+
+
+
+
 
         _initViewModel_Bill: (billDef)->
             cp = @cpViewModel.cpBill
@@ -472,8 +533,8 @@ define [
             fieldMap = cp.fieldMap = {}
 
             @addTtxFieldSet billDef.viewFields, cp.ctrl, 2, cp.domNode, fieldMap
-            @addTtxGrid billDef.actions, @addTitlePane('单据操作', cp.domNode).containerNode, {}
-            @addTtxGrid billDef.fields, @addTitlePane('单据字段', cp.domNode).containerNode, {}
+            cp.actionsGrid = @addTtxGrid billDef.actions, @addTitlePane('单据操作', cp.domNode).containerNode, {}
+            cp.fieldsGrid = @addTtxGrid billDef.fields, @addTitlePane('单据字段', cp.domNode).containerNode, {}
 
             # grid
             gridPane = cp.gridPane = @addTitlePane('明细列表', cp.domNode)
@@ -497,11 +558,11 @@ define [
 
             window.store = new Memory(data: [{id: 1, name: 11}])
             structure = g.structure.concat()
-            #            structure[1].alwaysEditing = false
-#            structure[1].editor = FilteringSelect
-            structure[1].editorArgs = {"props": '{store: store, labelAttr: "id"}'}
-            g.setColumns structure
-            g.startup()
+    #            structure[1].alwaysEditing = false
+    #            structure[1].editor = FilteringSelect
+#            structure[1].editorArgs = {"props": '{store: store, labelAttr: "id"}'}
+#            g.setColumns structure
+#            g.startup()
 
 
     }

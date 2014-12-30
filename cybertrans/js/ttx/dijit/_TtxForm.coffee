@@ -1,6 +1,7 @@
 define [
     'dojo/_base/declare'
     'dojo/_base/lang'
+    'dojo/_base/Deferred'
     'dojo/dom-construct'
     'dojo/dom-geometry'
     'dojo/query'
@@ -9,8 +10,10 @@ define [
     'dojo/store/JsonRest'
     'dijit/TitlePane'
     'dijit/Toolbar'
+    'dijit/ConfirmTooltipDialog'
     'dijit/Menu'
     'dijit/MenuItem'
+    'dijit/form/Form'
     'dijit/form/Button'
     'dijit/form/DropDownButton'
     'dijit/form/ComboButton'
@@ -23,10 +26,10 @@ define [
     'gridx/core/model/cache/Sync'
     'gridx/allModules'
     'ttx/util'
-], (declare, lang, domConstruct, domGeometry, query, request,
+], (declare, lang, Deferred, domConstruct, domGeometry, query, request,
     Memory, JsonRest,
-    TitlePane, Toolbar, Menu, MenuItem,
-    Button, DropDownButton, ComboButton, TextBox, FilteringSelect,
+    TitlePane, Toolbar, ConfirmTooltipDialog, Menu, MenuItem,
+    Form, Button, DropDownButton, ComboButton, TextBox, FilteringSelect,
     at, getStateful, ModelRefController,
     Grid, Cache, modules,
     util)->
@@ -112,8 +115,8 @@ define [
             widgetArgs = lang.mixin({label: def.name}, def.args)
             btn = null
             if def.dropDown
-                menu = @_newDropDownMenu(def.dropDown)
-                widgetArgs = lang.mixin(widgetArgs, {dropDown: menu})
+                if lang.isArray def.dropDown
+                    widgetArgs = lang.mixin(widgetArgs, {dropDown: @_newDropDownMenu(def.dropDown)})
                 if def.action
                     btn = new ComboButton widgetArgs
                     @_addActionClick def, btn, args
@@ -141,7 +144,7 @@ define [
         _addActionClick: (def, btn, args)->
             if not def.action
                 btn.onClick = ->
-                    console.error '未配置Action'
+                    console.log '未配置Action'
                     console.log def
                 return ''
             idx = def.action.indexOf(':')
@@ -154,14 +157,14 @@ define [
                 if actionSets.default[act]
                     btn.onClick = lang.hitch actionSets.default, act, args
                 else
-                    console.error '配置的 Action 不存在'
-                    console.error def
+                    console.log '配置的 Action 不存在'
+                    console.log def
             else if idx == 0 # global module
                 if actionSets.global[act]
                     btn.onClick = lang.hitch actionSets.global, act, args
                 else
-                    console.error '配置的 Action 不存在'
-                    console.error def
+                    console.log '配置的 Action 不存在'
+                    console.log def
             else # module need amd
                 thiz = this
                 request [def.action.substr(0, idx)], (ajs)->
@@ -170,8 +173,8 @@ define [
                     if acs[act]
                         btn.onClick = lang.hitch acs, act, args
                     else
-                        console.error '配置的 Action 不存在'
-                        console.error def
+                        console.log '配置的 Action 不存在'
+                        console.log def
 
 
         _newDropDownMenu: (actionsDef)->
@@ -195,9 +198,9 @@ define [
                 modules.VirtualVScroller
                 modules.SingleSort,
                 modules.ColumnResizer,
-                modules.Pagination,
+#                modules.Pagination,
                 modules.ExtendedSelectColumn,
-                modules.PaginationBar
+#                modules.PaginationBar
             ]
             if args.modules
                 for m in args.modules
@@ -221,7 +224,7 @@ define [
             # 列表容器
             listDiv = domConstruct.create 'div', {class: 'listGridContainer'}, domNode
             # 列表工具栏
-            listToolbar = new Toolbar {}
+            listToolbar = new Toolbar {actionMap: {}}
             # 列表Grid
             grid = @addGridx(listDiv, new Memory(data: []), def.structure, lang.mixin({
                 barTop: [{content: '<h1>' + def.name || '' + ' </h1>'}, listToolbar]
@@ -229,7 +232,9 @@ define [
 
             if def.actions
                 for adef in def.actions
-                    listToolbar.addChild @newTtxAction(adef, {}, grid)
+                    btn = @newTtxAction(adef, {}, grid)
+                    listToolbar.actionMap[adef.id] = btn
+                    listToolbar.addChild btn
             grid
 
         layoutFieldSetsPane: (pane)->
@@ -248,5 +253,32 @@ define [
                         children = field.childNodes
                         if children.length == 2 and children[0].tagName == 'LABEL'
                             domGeometry.setMarginBox children[1], w: fieldWidth - domGeometry.getMarginBox(children[0]).w
+
+        getCtrlData: (ctrl)->
+            data = lang.mixin({}, ctrl.model)
+            data.declaredClass = undefined
+            data._attrPairNames = undefined
+            data
+
+        newTooltip: (defs, grid, object = {})->
+            # grid new action tooltip
+            tipCp = new Form()
+            tip = new ConfirmTooltipDialog({
+                content: tipCp
+                fieldMap: {}
+                ctrl: new ModelRefController model: getStateful object
+                setData: (data)->
+                    ctrl.set
+                    tipCp.getValues()
+            })
+            @addTtxFieldSet(defs, tip.ctrl, 2, tipCp.domNode, tip.fieldMap)
+
+            data = @getCtrlData(tip.ctrl)
+            # 新增确定事件
+            tip.onExecute = ->
+                Deferred.when(grid.store.add(data), ->
+                    console.log("A new item is saved to server");
+                )
+            tip
 
     }

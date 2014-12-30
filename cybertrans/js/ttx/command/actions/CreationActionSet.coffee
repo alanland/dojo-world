@@ -39,11 +39,18 @@ define [
             }
             data
 
+        tableModel_Delete: ->
+            cp = @wso.cpTableModel
+            key = cp.ctrl.get('key')
+            if key
+                @wso.app.dataManager.delete('/rest/creation/tableModels/' + key)
+            else
+                console.log 'no value to delete'
         tableModel_New: ->
             # summary:
             #       新增动作，清空界面数据
             cp = @wso.cpTableModel
-            cp.tableModelSelect.set 'value', ''
+            cp.modelSelect.set 'value', ''
             for k in ['key', 'description', 'tableName', 'idColumnName']
                 cp.ctrl.set(k, '')
             cp.grid.setStore(new Memory(data: []))
@@ -98,11 +105,11 @@ define [
             }
             data
 
-        billModel_Delete:->
+        billModel_Delete: ->
             cp = @wso.cpBillModel
             bill = cp.modelSelect.get 'value'
             if bill
-                @wso.app.dataManager.delete('/rest/creation/billModels/'+bill)
+                @wso.app.dataManager.delete('/rest/creation/billModels/' + bill)
             else
                 console.log 'no value to delete'
 
@@ -111,7 +118,7 @@ define [
             #       新增动作，清空界面数据
             cp = @wso.cpBillModel
             cp.modelSelect.set 'value', ''
-            item = {'key': '', 'description': '', 'header': '', 'detail': '','principal':'','subordinate':''}
+            item = {'key': '', 'description': '', 'header': '', 'detail': '', 'principal': '', 'subordinate': ''}
             for k,v in item
                 cp.ctrl.set k, v
 
@@ -142,4 +149,85 @@ define [
                 (err)->
                     console.error err
             )
+
+        _checkViewModel: ->
+            @wso.cpViewModel.form.validate()
+        __getGridData: (grid)->
+            data = []
+            if grid.rowCount() > 0
+                for i in [0..grid.rowCount() - 1]
+                    data.push grid.row(i).item()
+            data
+
+        _getViewModelData: ->
+            # summary:
+            #       获取表模型数据
+            gridData = []
+            cp = @wso.cpViewModel
+
+            #
+            # list
+            cpList = cp.cpList
+            list = {columns: cpList.ctrl.get 'columns'}
+            list.actions = @__getGridData(cpList.actionsGrid) # 查询按钮
+            list.fields = @__getGridData(cpList.fieldsGrid) # 查询字段
+            list.grid = {name: cpList.gridPane.ctrl.get('name')} # 表格
+            list.grid.actions = @__getGridData(cpList.gridPane.actionsGrid)
+            list.grid.structure = @__getGridData(cpList.gridPane.structureGrid)
+
+            #
+            # bill
+            cpBill = cp.cpBill
+            bill = {columns: cpBill.ctrl.get 'columns'}
+            bill.actions = @__getGridData(cpBill.actionsGrid) # 查询按钮
+            bill.fields = @__getGridData(cpBill.fieldsGrid) # 查询字段
+            bill.grid = {name: cpBill.gridPane.ctrl.get('name')} # 表格
+            bill.grid.actions = @__getGridData(cpBill.gridPane.actionsGrid)
+            bill.grid.structure = @__getGridData(cpBill.gridPane.structureGrid)
+
+            #
+            # detail
+            cpDetail = cp.cpDetail
+            detail = {columns: cpBill.ctrl.get 'columns'}
+            detail.actions = @__getGridData(cpDetail.actionsGrid) # 查询按钮
+            detail.fields = @__getGridData(cpDetail.fieldsGrid) # 查询字段
+
+            data = {
+                key: cp.ctrl.get('key')
+                description: cp.ctrl.get('description')
+                bill: cp.ctrl.get('bill')
+                actionJs: cp.ctrl.get('actionJs')
+                list: list
+                bill: bill
+                detail: detail
+            }
+            data
+        viewModel_New: ->
+            1
+        viewModel_Create: ->
+            # summary:
+            #       保存新增的表模型
+            if not @_checkViewModel()
+                return false
+            data = @_getViewModelData()
+            @wso.app.dataManager.post('/rest/creation/viewModels', data).then(
+                (res)->
+                    console.log res
+                (err)->
+                    console.error err
+            )
+        viewModel_Update: ->
+            # summary:
+            #       保存新增的表模型
+            if not @_checkViewModel()
+                return false
+            data = @_getViewModelData()
+            @wso.app.dataManager.put('/rest/creation/viewModels', data).then(
+                (res)->
+                    console.log res
+                (err)->
+                    console.error err
+            )
+        viewModel_Delete: ->
+            1
     }
