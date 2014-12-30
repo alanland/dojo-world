@@ -457,8 +457,8 @@ define [
 
             # 表单界面定义
             @_initViewModel_List(viewModelDef.list, billData, headerData, detailData)
-            @_initViewModel_Bill(viewModelDef.bill)
-            @_initViewModel_Detail(viewModelDef.detail)
+            @_initViewModel_Bill(viewModelDef.bill, billData, headerData, detailData)
+            @_initViewModel_Detail(viewModelDef.detail, billData, headerData, detailData)
             tcViewModel.startup()
 
             @__initViewModel_DealWithBill(billData, headerData, detailData)
@@ -480,8 +480,12 @@ define [
             gridPane = cp.gridPane = @addTitlePane('查询界面列表', cp.domNode)
             gridPane.ctrl = new ModelRefController model: getStateful {columns: 2}
             @addTtxFieldSet listDef.grid.fields, gridPane.ctrl, 2, gridPane.containerNode, {}
-            gridPane.actionsGrid = @addTtxGrid listDef.grid.actions, gridPane.containerNode, {}
-            gridPane.structureGrid = @addTtxGrid listDef.grid.structure, gridPane.containerNode, {}
+            gridPane.actionsGrid = @addTtxGrid listDef.grid.actions, gridPane.containerNode, {
+                modules: [modules.CellWidget, modules.Edit]
+            }
+            gridPane.structureGrid = @addTtxGrid listDef.grid.structure, gridPane.containerNode, {
+                modules: [modules.CellWidget, modules.Edit]
+            }
 
             return if not billData
 
@@ -493,7 +497,10 @@ define [
                     "id": "table", "type": "filteringSelect", "field": "table", "name": "Table",
                     "args": {"searchAttr": "key", "labelAttr": "key"}
                 },
-                {"id": "field", "type": "filteringSelect", "field": "field", "name": "Field"},
+                {
+                    "id": "field", "type": "filteringSelect", "field": "field", "name": "Field",
+                    "args": {"searchAttr": "id", "labelAttr": "id"}
+                },
                 {"id": "name", "type": "string", "field": "name", "name": "name"},
                 {"id": "type", "type": "string", "field": "type", "name": "type"},
                 {"id": "operator", "type": "string", "field": "operator", "name": "operator"},
@@ -509,8 +516,9 @@ define [
             data.push {key: detailData.key, value: detailData} if detailData
             tipTable = tooltip.fieldMap['table'] # tip 中的 Table 字段
             tipTable.set 'store', new Memory(data: data, idProperty: 'key')
+            tipField = tooltip.fieldMap['field']
             aspect.after tipTable, 'onChange', ->
-                tooltip.fieldMap['field'].set 'store', new Memory(data: tipTable.item.value.fields)
+                tipField.set 'store', new Memory(data: tipTable.item.value.fields.concat())
 
             #
             # list 查询结构列表列的 tooltip
@@ -521,35 +529,102 @@ define [
             ]
             tooltip = @newTooltip(fdefs, gridPane.structureGrid)
             gridPane.structureGrid.barTop[1].actionMap['new'].set 'dropDown', tooltip
-            tooltip.fieldMap['field'].set 'store', new Memory(data:headerData.fields)
+            tooltip.fieldMap['field'].set 'store', new Memory(data: headerData.fields)
 
 
-
-
-
-        _initViewModel_Bill: (billDef)->
+        _initViewModel_Bill: (billDef, billData, headerData, detailData)->
             cp = @cpViewModel.cpBill
             ctrl = cp.ctrl = new ModelRefController model: getStateful {columns: 2}
             fieldMap = cp.fieldMap = {}
 
             @addTtxFieldSet billDef.viewFields, cp.ctrl, 2, cp.domNode, fieldMap
-            cp.actionsGrid = @addTtxGrid billDef.actions, @addTitlePane('单据操作', cp.domNode).containerNode, {}
-            cp.fieldsGrid = @addTtxGrid billDef.fields, @addTitlePane('单据字段', cp.domNode).containerNode, {}
+            cp.actionsGrid = @addTtxGrid billDef.actions, @addTitlePane('单据操作', cp.domNode).containerNode, {
+                modules: [modules.CellWidget, modules.Edit]
+            }
+            cp.fieldsGrid = @addTtxGrid billDef.fields, @addTitlePane('单据字段', cp.domNode).containerNode, {
+                modules: [modules.CellWidget, modules.Edit]
+            }
 
             # grid
             gridPane = cp.gridPane = @addTitlePane('明细列表', cp.domNode)
             gridPane.ctrl = new ModelRefController model: getStateful {columns: 2}
             @addTtxFieldSet billDef.grid.fields, gridPane.ctrl, 2, gridPane.containerNode, {}
-            gridPane.actionsGrid = @addTtxGrid billDef.grid.actions, gridPane.containerNode, {}
-            gridPane.structureGrid = @addTtxGrid billDef.grid.structure, gridPane.containerNode, {}
+            gridPane.actionsGrid = @addTtxGrid billDef.grid.actions, gridPane.containerNode, {
+                modules: [modules.CellWidget, modules.Edit]
+            }
+            gridPane.structureGrid = @addTtxGrid billDef.grid.structure, gridPane.containerNode, {
+                modules: [modules.CellWidget, modules.Edit]
+            }
 
-        _initViewModel_Detail: (detailDef)->
+            return if not billData
+
+            #
+            # bill 字段的新增 Tooltip
+            fdefs = [
+                {"id": "id", "type": "string", "field": "id", "name": "Id"},
+                {
+                    "id": "field", "type": "filteringSelect", "field": "field", "name": "Field",
+                    "args": {"searchAttr": "id", "labelAttr": "id"}
+                },
+                {"id": "name", "type": "string", "field": "name", "name": "name"},
+                {"id": "type", "type": "string", "field": "type", "name": "type"},
+                {"id": "span", "type": "string", "field": "span", "name": "span"},
+                {"id": "wrap", "type": "string", "field": "wrap", "name": "wrap"},
+                {"id": "args", "type": "string", "field": "args", "name": "args"},
+            ]
+            tooltip = @newTooltip(fdefs, cp.fieldsGrid, {type: 'string', operator: '='})
+            cp.fieldsGrid.barTop[1].actionMap['new'].set 'dropDown', tooltip
+
+            # table 字段
+            tooltip.fieldMap['field'].set 'store', new Memory(data: headerData.fields)
+
+            #
+            # list 查询结构列表列的 tooltip
+            fdefs = [
+                {"id": "id", "type": "string", "field": "id", "name": "Id"},
+                {"id": "field", "type": "filteringSelect", "field": "field", "name": "Field"},
+                {"id": "name", "type": "string", "field": "name", "name": "name"}
+            ]
+            tooltip = @newTooltip(fdefs, gridPane.structureGrid)
+            gridPane.structureGrid.barTop[1].actionMap['new'].set 'dropDown', tooltip
+            tooltip.fieldMap['field'].set 'store', new Memory(data: detailData.fields)
+
+
+
+        _initViewModel_Detail: (detailDef, billData, headerData, detailData)->
             cp = @cpViewModel.cpDetail
             ctrl = cp.ctrl = new ModelRefController model: getStateful {columns: 2}
             fieldMap = cp.fieldMap = {}
             @addTtxFieldSet detailDef.viewFields, cp.ctrl, 2, cp.domNode, fieldMap
-            cp.actionsGrid = @addTtxGrid detailDef.actions, @addTitlePane('明细操作', cp.domNode).containerNode, {}
-            cp.fieldsGrid = @addTtxGrid detailDef.fields, @addTitlePane('明细字段', cp.domNode).containerNode, {}
+            cp.actionsGrid = @addTtxGrid detailDef.actions, @addTitlePane('明细操作', cp.domNode).containerNode, {
+                modules: [modules.CellWidget, modules.Edit]
+            }
+            cp.fieldsGrid = @addTtxGrid detailDef.fields, @addTitlePane('明细字段', cp.domNode).containerNode, {
+                modules: [modules.CellWidget, modules.Edit]
+            }
+
+            return if not billData
+
+            #
+            # bill 字段的新增 Tooltip
+            fdefs = [
+                {"id": "id", "type": "string", "field": "id", "name": "Id"},
+                {
+                    "id": "field", "type": "filteringSelect", "field": "field", "name": "Field",
+                    "args": {"searchAttr": "id", "labelAttr": "id"}
+                },
+                {"id": "name", "type": "string", "field": "name", "name": "name"},
+                {"id": "type", "type": "string", "field": "type", "name": "type"},
+                {"id": "span", "type": "string", "field": "span", "name": "span"},
+                {"id": "wrap", "type": "string", "field": "wrap", "name": "wrap"},
+                {"id": "args", "type": "string", "field": "args", "name": "args"},
+            ]
+            tooltip = @newTooltip(fdefs, cp.fieldsGrid, {type: 'string', operator: '='})
+            cp.fieldsGrid.barTop[1].actionMap['new'].set 'dropDown', tooltip
+
+            # table 字段
+            tooltip.fieldMap['field'].set 'store', new Memory(data: detailData.fields)
+
 
         __initViewModel_DealWithBill: (billData, headerData, detailData)->
             cp = cp = @cpViewModel

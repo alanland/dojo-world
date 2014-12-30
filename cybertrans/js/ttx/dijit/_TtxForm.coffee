@@ -2,6 +2,7 @@ define [
     'dojo/_base/declare'
     'dojo/_base/lang'
     'dojo/_base/Deferred'
+    'dojo/on'
     'dojo/dom-construct'
     'dojo/dom-geometry'
     'dojo/query'
@@ -10,6 +11,7 @@ define [
     'dojo/store/JsonRest'
     'dijit/TitlePane'
     'dijit/Toolbar'
+    'dijit/TooltipDialog'
     'dijit/ConfirmTooltipDialog'
     'dijit/Menu'
     'dijit/MenuItem'
@@ -26,13 +28,15 @@ define [
     'gridx/core/model/cache/Sync'
     'gridx/allModules'
     'ttx/util'
-], (declare, lang, Deferred, domConstruct, domGeometry, query, request,
+], (declare, lang, Deferred,
+    onn, domConstruct, domGeometry, query, request,
     Memory, JsonRest,
-    TitlePane, Toolbar, ConfirmTooltipDialog, Menu, MenuItem,
+    TitlePane, Toolbar, TooltipDialog, ConfirmTooltipDialog, Menu, MenuItem,
     Form, Button, DropDownButton, ComboButton, TextBox, FilteringSelect,
     at, getStateful, ModelRefController,
     Grid, Cache, modules,
     util)->
+    defaultDropDown = new TooltipDialog({content: "未实现的下拉操作"})
     declare null, {
         actionSets: {default: {}, global: {}}
 
@@ -120,8 +124,9 @@ define [
                 if def.action
                     btn = new ComboButton widgetArgs
                     @_addActionClick def, btn, args
-                else
-                    btn = new DropDownButton widgetArgs
+                else # 为定义操作需要以后定义
+#                    btn = new DropDownButton lang.mixin({dropDown: defaultDropDown}, widgetArgs)
+                    btn = new DropDownButton widgetArgs # todo dropDown
             else
                 btn = new Button widgetArgs
                 if def.action  # 如果有配置动作
@@ -260,24 +265,27 @@ define [
             data._attrPairNames = undefined
             data
 
-        newTooltip: (defs, grid, object = {})->
+        newTooltip: (defs, grid, defaultValues = {})->
             # grid new action tooltip
             tipCp = new Form()
             tip = new ConfirmTooltipDialog({
+                defaultValues: defaultValues
                 content: tipCp
                 fieldMap: {}
-                ctrl: new ModelRefController model: getStateful object
-                setData: (data)->
-                    ctrl.set
-                    tipCp.getValues()
+                ctrl: new ModelRefController model: getStateful defaultValues
+                reset: ()->
+                    ctrl.model = getStateful @defaultValues
             })
+            #            tip.startup()
             @addTtxFieldSet(defs, tip.ctrl, 2, tipCp.domNode, tip.fieldMap)
 
-            data = @getCtrlData(tip.ctrl)
+            that = this
             # 新增确定事件
             tip.onExecute = ->
+                data = that.getCtrlData(tip.ctrl)
                 Deferred.when(grid.store.add(data), ->
                     console.log("A new item is saved to server");
+#                    tip.reset()
                 )
             tip
 
