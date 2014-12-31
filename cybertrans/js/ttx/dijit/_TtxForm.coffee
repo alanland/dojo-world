@@ -21,6 +21,7 @@ define [
     'dijit/form/ComboButton'
     'dijit/form/TextBox'
     'dijit/form/FilteringSelect'
+    'dijit/layout/ContentPane'
     'dojox/mvc/at'
     'dojox/mvc/getStateful'
     'dojox/mvc/ModelRefController'
@@ -33,6 +34,7 @@ define [
     Memory, JsonRest,
     TitlePane, Toolbar, TooltipDialog, ConfirmTooltipDialog, Menu, MenuItem,
     Form, Button, DropDownButton, ComboButton, TextBox, FilteringSelect,
+    ContentPane,
     at, getStateful, ModelRefController,
     Grid, Cache, modules,
     util)->
@@ -116,18 +118,25 @@ define [
             #   {"id": "query", "action": "query", "name": "Query"}
             # actionSets:
             #   actionSets {global:obj,default:obj}
+            # args:
+            #   grid
             widgetArgs = lang.mixin({label: def.name}, def.args)
             btn = null
-            if def.dropDown
-                if lang.isArray def.dropDown
+            if def.dropDown # 有下拉属性的按钮
+                if lang.isArray def.dropDown # 下拉按钮
                     widgetArgs = lang.mixin(widgetArgs, {dropDown: @_newDropDownMenu(def.dropDown)})
-                if def.action
-                    btn = new ComboButton widgetArgs
-                    @_addActionClick def, btn, args
-                else # 为定义操作需要以后定义
-#                    btn = new DropDownButton lang.mixin({dropDown: defaultDropDown}, widgetArgs)
-                    btn = new DropDownButton widgetArgs # todo dropDown
-            else
+                    if def.action # 单击 + 下拉
+                        btn = new ComboButton widgetArgs
+                        @_addActionClick def, btn, args
+                    else # 单纯下拉
+                        btn = new DropDownButton widgetArgs
+                else # 下拉表单
+                    if def.action # 指定tooltip函数 @newGridAddRowButton 表示回调函数 # todo 会造成布局失败
+                       # btn = this[def.action].call this, args, widgetArgs # todo dropDown
+                        btn = new DropDownButton widgetArgs
+                    else
+                        btn = new DropDownButton widgetArgs
+            else # 一个普通的按钮
                 btn = new Button widgetArgs
                 if def.action  # 如果有配置动作
                     @_addActionClick def, btn, args
@@ -265,16 +274,62 @@ define [
             data._attrPairNames = undefined
             data
 
-        newTooltip: (defs, grid, defaultValues = {})->
+        newGridAddRowButton: (grid, widgetArgs)->
+            defs = [
+                {"id": "id", "type": "string", "field": "id", "name": "Id"},
+                {"id": "field", "type": "filteringSelect", "field": "field", "name": "Field"},
+                {"id": "name", "type": "string", "field": "name", "name": "name"}
+            ]
+#            tip = @newGridAddRowTooltip fdefs, grid
+#            btn = new DropDownButton widgetArgs
+#            btn.set 'dropDown', tip
+##            btn.startup()
+#            btn
+
+
+            defaultValues={}
+
             # grid new action tooltip
             tipCp = new Form()
+            tipCp.startup()
             tip = new ConfirmTooltipDialog({
                 defaultValues: defaultValues
                 content: tipCp
                 fieldMap: {}
                 ctrl: new ModelRefController model: getStateful defaultValues
                 reset: ()->
-                    ctrl.model = getStateful @defaultValues
+                    @ctrl.model = getStateful @defaultValues
+            })
+            #            tip.startup()
+            @addTtxFieldSet(defs, tip.ctrl, 2, tipCp.domNode, tip.fieldMap)
+
+            that = this
+            # 新增确定事件
+            tip.onExecute = ->
+                data = that.getCtrlData(tip.ctrl)
+                Deferred.when(grid.store.add(data), ->
+                    console.log("A new item is saved to server");
+#                    tip.reset()
+                )
+            tip
+
+            btn = new DropDownButton widgetArgs
+            btn.set 'dropDown', tip
+            btn
+
+
+
+        newGridAddRowTooltip: (defs, grid, defaultValues = {})->
+            # grid new action tooltip
+            tipCp = new Form()
+            tipCp.startup()
+            tip = new ConfirmTooltipDialog({
+                defaultValues: defaultValues
+                content: tipCp
+                fieldMap: {}
+                ctrl: new ModelRefController model: getStateful defaultValues
+                reset: ()->
+                    @ctrl.model = getStateful @defaultValues
             })
             #            tip.startup()
             @addTtxFieldSet(defs, tip.ctrl, 2, tipCp.domNode, tip.fieldMap)

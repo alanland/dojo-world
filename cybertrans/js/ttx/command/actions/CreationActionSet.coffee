@@ -195,7 +195,7 @@ define [
             data = {
                 key: cp.ctrl.get('key')
                 description: cp.ctrl.get('description')
-                bill: cp.ctrl.get('bill')
+                billKey: cp.ctrl.get('billKey')
                 actionJs: cp.ctrl.get('actionJs')
                 list: list
                 bill: bill
@@ -230,4 +230,15 @@ define [
             )
         viewModel_Delete: ->
             1
+
+        navigatorSave: ->
+            cp = @wso.cpNavigator
+            data = cp.tree.model.store.query()
+            @wso.app.dataManager.put('rest/creation/navigator', {data:data}).then(
+                (res)->
+                    console.log res
+                (err)->
+                    console.log err
+            )
+
     }

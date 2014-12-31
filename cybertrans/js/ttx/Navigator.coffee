@@ -15,6 +15,7 @@ define [
 
         app: null
         showRoot: false
+        url: ''
 
     # store: TreeModelStore
     #   导航的store。new args.navigator.store(args.navigator.storeArgs)
@@ -40,13 +41,16 @@ define [
             #   根据传入的 nav 参数，生成 store和model，以及最终的widget
             #
             #   参数默认在 main 模块里面
+            @app = args.app
+            @url = args.app.server + 'rest/creation/navigator'
             data = [
                 {"id": "root", "name": "TTX", "tid": "root"},
                 {"id": "user", "name": "用户", "tid": "bll:User", "parent": "root", oid: 'user'}
             ]
             store = new Memory({data: data});
             store = new ObjectStore({
-                url: args.app.server + 'rest/data/navigator',
+#                url: args.app.server + 'rest/data/navigator',
+                url: @url,
                 handleAs: 'json'
             });
             model = new ObjectStoreModel({

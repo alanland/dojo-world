@@ -23,20 +23,27 @@ define [
     'dijit/form/DropDownButton'
     'dijit/layout/ContentPane'
     'dijit/layout/TabContainer'
+    'dijit/tree/dndSource'
     'dojo/text!./templates/Creation.html'
     'dojox/mvc/at'
     'dojox/mvc/getStateful'
     'dojox/mvc/ModelRefController'
     'gridx/allModules'
+    'cbtree/Tree'
+    'cbtree/store/ObjectStore'
+    'cbtree/model/TreeStoreModel'
     'ttx/dijit/_TtxForm'
 ], (declare, array, lang, Deferred,
     DeferredList, domConstruct, domGeometry, aspect, onn, Memory,
     _WidgetBase, _TemplatedMixin, _WidgetsInTemplateMixin,
     TitlePane, Toolbar, TooltipDialog, ConfirmTooltipDialog,
     Form, Button, TextBox, FilteringSelect, DropDownButton,
-    ContentPane, TabContainer, template,
+    ContentPane, TabContainer,
+    dndSource,
+    template,
     at, getStateful, ModelRefController,
     modules,
+    Tree, ObjectStore, ObjectStoreModel,
     _TtxForm)->
     declare [_WidgetBase, _TemplatedMixin, _WidgetsInTemplateMixin, _TtxForm], {
         app: null
@@ -74,6 +81,7 @@ define [
         _buildCache: ->
             @_buildCacheTable(@dataCache)
             @_buildCacheBill(@dataCache)
+            @_buildCacheView(@dataCache)
         _buildCacheTable: (res)->
             @dataCache.tableStore = new Memory(data: res, idProperty: 'key')
             if @cpBillModel.fieldMap
@@ -81,7 +89,9 @@ define [
                 @cpBillModel.fieldMap['detail'].set 'store', @dataCache.tableStore
         _buildCacheBill: (res)->
             @dataCache.billStore = new Memory(data: res, idProperty: 'key')
-        _reBuildCacheTable: (dataCache)->
+        _buildCacheView: (res)->
+            @dataCache.viewStore = new Memory(data: res, idProperty: 'key')
+        _reBuildCacheTable: ->
             that = this
             @app.dataManager.get('/rest/creation/tableModels').then(
                 (res)->
@@ -89,11 +99,19 @@ define [
                 (err)->
                     console.error err
             )
-        _reBuildCacheBill: (dataCache)->
+        _reBuildCacheBill: ->
             that = this
             @app.dataManager.get('/rest/creation/billModels').then(
                 (res)->
                     that._buildCacheBill(res)
+                (err)->
+                    console.error err
+            )
+        _reBuildCacheView: ->
+            that = this
+            @app.dataManager.get('/rest/creation/viewModels').then(
+                (res)->
+                    that._buildCacheView(res)
                 (err)->
                     console.error err
             )
@@ -105,10 +123,12 @@ define [
                 @app.dataManager.getBillDefinition('Creation'),
                 @app.dataManager.get('/rest/creation/tableModels')
                 @app.dataManager.get('/rest/creation/billModels')
+                @app.dataManager.get('/rest/creation/viewModels')
             ]).then(
                 (res)->
                     that._buildCacheTable res[1][1]
                     that._buildCacheBill res[2][1]
+                    that._buildCacheView res[3][1]
                     that._buildForm(res[0][1])
                 (err)->
                     ''
@@ -129,6 +149,7 @@ define [
             @_initTableModel(billDef.tableModel)
             @_initBillModel(billDef.billModel)
             @_initViewModel(billDef.viewModel)
+            @_initNavigator()
             @startup()
             @layout()
 
@@ -414,6 +435,11 @@ define [
                     modelSelect.set('store', new Memory(data: res, idProperty: 'key'))
             )
 
+            showModel = (item)->
+                for k in ['key', 'billKey', 'actionJs', 'description']
+                    ctrl.set k, item[k]
+            # 余下的由联动
+
 
             # 模型属性
             form = cp.form = @cpViewModelForm
@@ -424,16 +450,19 @@ define [
 
 
             # 下拉框
-            fieldMap['bill'].set 'labelAttr', 'key'
-            fieldMap['bill'].set 'searchAttr', 'key'
-            fieldMap['bill'].set 'store', @dataCache.billStore
-            aspect.after fieldMap['bill'], 'onChange', lang.hitch(this, (value)->
-                cp.tcViewModel.destroyRecursive()
+            fieldMap['billKey'].set 'labelAttr', 'key'
+            fieldMap['billKey'].set 'searchAttr', 'key'
+            fieldMap['billKey'].set 'store', @dataCache.billStore
+            aspect.after fieldMap['billKey'], 'onChange', lang.hitch(this, (value)->
+                cp.tcViewModel.destroyRecursive() if cp.tcViewModel
                 @_initViewTabContainer(cp, viewModelDef)
+                @_initViewTabContainerWithData()
             ), true
 
-            # 初始化页面节点
-            @_initViewTabContainer(cp, viewModelDef)
+    # 初始化页面节点
+#            @_initViewTabContainer(cp, viewModelDef)
+
+
 
         _initViewTabContainer: (cp, viewModelDef)->
             # 三个tab页
@@ -450,7 +479,7 @@ define [
 
 
             # deal data
-            billData = @dataCache.billStore.get(cp.ctrl.get 'bill' || '')
+            billData = @dataCache.billStore.get(cp.ctrl.get 'billKey' || '')
             headerData = @dataCache.tableStore.get billData?.header
             detailData = @dataCache.tableStore.get billData?.detail
 
@@ -460,8 +489,6 @@ define [
             @_initViewModel_Bill(viewModelDef.bill, billData, headerData, detailData)
             @_initViewModel_Detail(viewModelDef.detail, billData, headerData, detailData)
             tcViewModel.startup()
-
-            @__initViewModel_DealWithBill(billData, headerData, detailData)
 
         _initViewModel_List: (listDef, billData, headerData, detailData)->
             cp = @cpViewModel.cpList
@@ -489,6 +516,13 @@ define [
 
             return if not billData
 
+
+            #
+            #
+            @__addDefaultGridNewButton(cp.actionsGrid)
+            @__addDefaultGridNewButton(gridPane.actionsGrid)
+
+
             #
             # list 查询字段的新增 Tooltip
             fdefs = [
@@ -508,7 +542,7 @@ define [
                 {"id": "wrap", "type": "string", "field": "wrap", "name": "wrap"},
                 {"id": "args", "type": "string", "field": "args", "name": "args"},
             ]
-            tooltip = @newTooltip(fdefs, cp.fieldsGrid, {type: 'string', operator: '='})
+            tooltip = @newGridAddRowTooltip(fdefs, cp.fieldsGrid, {type: 'string', operator: '='})
             cp.fieldsGrid.barTop[1].actionMap['new'].set 'dropDown', tooltip
 
             # table 字段
@@ -527,7 +561,7 @@ define [
                 {"id": "field", "type": "filteringSelect", "field": "field", "name": "Field"},
                 {"id": "name", "type": "string", "field": "name", "name": "name"}
             ]
-            tooltip = @newTooltip(fdefs, gridPane.structureGrid)
+            tooltip = @newGridAddRowTooltip(fdefs, gridPane.structureGrid)
             gridPane.structureGrid.barTop[1].actionMap['new'].set 'dropDown', tooltip
             tooltip.fieldMap['field'].set 'store', new Memory(data: headerData.fields)
 
@@ -558,6 +592,12 @@ define [
 
             return if not billData
 
+
+            #
+            #
+            @__addDefaultGridNewButton(cp.actionsGrid)
+            @__addDefaultGridNewButton(gridPane.actionsGrid)
+
             #
             # bill 字段的新增 Tooltip
             fdefs = [
@@ -572,7 +612,7 @@ define [
                 {"id": "wrap", "type": "string", "field": "wrap", "name": "wrap"},
                 {"id": "args", "type": "string", "field": "args", "name": "args"},
             ]
-            tooltip = @newTooltip(fdefs, cp.fieldsGrid, {type: 'string', operator: '='})
+            tooltip = @newGridAddRowTooltip(fdefs, cp.fieldsGrid, {type: 'string', operator: '='})
             cp.fieldsGrid.barTop[1].actionMap['new'].set 'dropDown', tooltip
 
             # table 字段
@@ -585,7 +625,7 @@ define [
                 {"id": "field", "type": "filteringSelect", "field": "field", "name": "Field"},
                 {"id": "name", "type": "string", "field": "name", "name": "name"}
             ]
-            tooltip = @newTooltip(fdefs, gridPane.structureGrid)
+            tooltip = @newGridAddRowTooltip(fdefs, gridPane.structureGrid)
             gridPane.structureGrid.barTop[1].actionMap['new'].set 'dropDown', tooltip
             tooltip.fieldMap['field'].set 'store', new Memory(data: detailData.fields)
 
@@ -606,6 +646,10 @@ define [
             return if not billData
 
             #
+            #
+            @__addDefaultGridNewButton(cp.actionsGrid)
+
+            #
             # bill 字段的新增 Tooltip
             fdefs = [
                 {"id": "id", "type": "string", "field": "id", "name": "Id"},
@@ -619,25 +663,171 @@ define [
                 {"id": "wrap", "type": "string", "field": "wrap", "name": "wrap"},
                 {"id": "args", "type": "string", "field": "args", "name": "args"},
             ]
-            tooltip = @newTooltip(fdefs, cp.fieldsGrid, {type: 'string', operator: '='})
+            tooltip = @newGridAddRowTooltip(fdefs, cp.fieldsGrid, {type: 'string', operator: '='})
             cp.fieldsGrid.barTop[1].actionMap['new'].set 'dropDown', tooltip
 
             # table 字段
             tooltip.fieldMap['field'].set 'store', new Memory(data: detailData.fields)
 
 
-        __initViewModel_DealWithBill: (billData, headerData, detailData)->
-            cp = cp = @cpViewModel
-            g = cp.cpList.fieldsGrid
-            # update structure
+        _initViewTabContainerWithData: ()->
+            cp = @cpViewModel
 
-            window.store = new Memory(data: [{id: 1, name: 11}])
-            structure = g.structure.concat()
-    #            structure[1].alwaysEditing = false
-    #            structure[1].editor = FilteringSelect
-#            structure[1].editorArgs = {"props": '{store: store, labelAttr: "id"}'}
-#            g.setColumns structure
-#            g.startup()
+            data = @dataCache.viewStore.get(cp.modelSelect.get('value'))
+
+            #
+            # list
+            list = data.list
+            cpList = cp.cpList
+            cpList.ctrl.set 'columns', list.columns
+            cpList.actionsGrid.setStore(new Memory(data: list.actions))
+            cpList.fieldsGrid.setStore(new Memory data: list.fields)
+            cpList.gridPane.ctrl.set 'name', list.grid.name
+            cpList.gridPane.actionsGrid.setStore(new Memory data: list.grid.actions)
+            cpList.gridPane.structureGrid.setStore(new Memory data: list.grid.structure)
+
+            #
+            # bill
+            bill = data.bill
+            cpBill = cp.cpBill
+            cpBill.ctrl.set 'columns', bill.columns
+            cpBill.actionsGrid.setStore(new Memory data: bill.actions)
+            cpBill.fieldsGrid.setStore(new Memory data: bill.fields)
+            cpBill.gridPane.ctrl.set 'name', bill.grid.name
+            cpBill.gridPane.actionsGrid.setStore(new Memory data: bill.grid.actions)
+            cpBill.gridPane.structureGrid.setStore(new Memory data: bill.grid.structure)
+
+            #
+            # detail
+            detail = data.detail
+            cpDetail = cp.cpDetail
+            cpBill.ctrl.set 'columns', detail.columns
+            cpDetail.actionsGrid.setStore(new Memory data: detail.actions)
+            cpDetail.fieldsGrid.setStore(new Memory data: detail.fields)
+
+        __addDefaultGridNewButton: (grid)->
+            fdefs = [
+                {"id": "id", "type": "string", "field": "id", "name": "Id"},
+                {"id": "name", "type": "string", "field": "name", "name": "Name"},
+                {"id": "action", "type": "string", "field": "action", "name": "Action"}
+            ]
+            tooltip = @newGridAddRowTooltip(fdefs, grid)
+            grid.barTop[1].actionMap['new'].set 'dropDown', tooltip
+
+        _initNavigator: ->
+            cp = @cpNavigator
+            that = this
+
+            # left
+            model = new ObjectStoreModel({
+                store: new ObjectStore({
+                    url: @app.navigator.url
+                    handleAs: 'json'
+                }),
+                query: {id: "root"},
+                rootLabel: "TTX",
+                checkedRoot: true
+            })
+
+            # dnd support
+            acceptItem = (target, source, position)->
+                console.log '--------------------------'
+                console.log target
+                console.log source
+                console.log position
+                return true
+            #                targetWidget = registry.getEnclosingWidget(target)
+            #                (targetWidget.tree == earthTree)
+            domNodeToItem = ->
+                console.log "+++++++++++++"
+                console.log arguments
+
+            tree = cp.tree = new Tree(
+                model: model,
+                showRoot: true,
+                openOnClick: false #响应点击事件而非展开动作
+                region: 'left'
+                splitter: true
+                style: {width: "200px"}
+                checkItemAcceptance: acceptItem,
+                itemCreator: domNodeToItem,
+                dndController: dndSource,
+                betweenThreshold: 5,
+                checkAcceptance: (source, nodes) ->
+                    return !!source.tree;
+            )
+            tree.startup()
+            cp.addChild tree
+            onn tree, 'click', (item)->
+                window.c = tree
+                cp.ctrl.set 'model', lang.mixin {}, item
+                console.log item
+
+
+            # top
+            bar = new ContentPane {
+                region: 'top'
+#                style: {'background-color': 'rgba(255, 255, 255, 0.3)'}
+            }
+            btnCreate = new Button (
+                label: 'Create',
+                onClick: ->
+                    if(tree.model.store.get cp.ctrl.get('id'))
+                        return alert 'id 已存在'
+                    tree.model.store.put that.getCtrlData cp.ctrl
+            )
+            bar.addChild btnCreate
+            btnUpdate = new Button(
+                label: 'Update'
+                onClick: ->
+                    if(tree.model.store.get cp.ctrl.get('id'))
+                        tree.model.store.put that.getCtrlData cp.ctrl
+                    else
+                        alert 'id 不存在'
+            )
+            bar.addChild btnUpdate
+            btnDelete = new Button(
+                label: 'Delete'
+                onClick: ->
+                    if(tree.model.store.get cp.ctrl.get('id'))
+                        tree.model.store.remove cp.ctrl.get('id')
+                    else
+                        alert 'id 不存在'
+            )
+            bar.addChild btnDelete
+
+            btnSaveNav = new Button(
+                label: 'Save Navigator'
+                onClick: lang.hitch @actionSets.default, 'navigatorSave'
+            )
+            bar.addChild(btnSaveNav)
+            cp.addChild bar
+
+            # center
+            center = new ContentPane {
+                region: 'center'
+            }
+            cp.addChild center
+            fdefs = [
+                {"id": "id", "type": "string", "field": "id", "name": "Id"},
+                {"id": "name", "type": "string", "field": "name", "name": "Name"},
+                {
+                    "id": "type", "type": "filteringSelect", "field": "type", "name": "Type",
+                    "args": {"searchAttr": "id", "labelAttr": "id", "required": false}
+                },
+                {"id": "tid", "type": "string", "field": "tid", "name": "View"},
+                {"id": "parent", "type": "string", "field": "parent", "name": "parent"},
+                {"id": "oid", "type": "string", "field": "oid", "name": "oid"}
+            ]
+            cp.fieldMap = {}
+            cp.ctrl = new ModelRefController model: getStateful {}
+            @addTtxFieldSet(fdefs, cp.ctrl, 2, center.domNode, cp.fieldMap)
+
+            cp.fieldMap.type.set 'store', new Memory(data: [
+                {id: 'amd'},
+                {id: 'bill'},
+            ])
+            cp.fieldMap.type.set 'value', 'bill'
 
 
     }
