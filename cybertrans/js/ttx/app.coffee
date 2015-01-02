@@ -27,10 +27,10 @@ define [
         statusBar: null
         appContainer: null
         startup: (args)->
-            @dataManager = new DataManager(app:@)
-            @wsoDefinitionsManager = new WsoDefinitionsManager(app:@)
-            @workspaceManager = new WorkspaceManager(app:@)
-            @navigator = new Navigator(app:@)
+            @dataManager = new DataManager(app: @)
+            @wsoDefinitionsManager = new WsoDefinitionsManager(app: @)
+            @workspaceManager = new WorkspaceManager(app: @)
+            @navigator = new Navigator(app: @)
             @dataManager.getJson('menu').then(
                 (data)->
                     commandItemStore = new ItemManager(
@@ -41,8 +41,8 @@ define [
                         commandItemStore: commandItemStore
                         menu: mainMenu
                         region: 'top'
-                        app:app
-                        id:'menu'
+                        app: app
+                        id: 'menu'
                     )
                     appContainer.addChild @menu
                 (err)->
@@ -68,6 +68,35 @@ define [
             appContainer.startup()
             window.onresize = ->
                 appContainer.startup()
+
             window.app = this
+            # build cache
+            @buildInitCache()
+
+        buildInitCache: ->
+            dataManager = @dataManager
+            dataManager.get('/rest/creation/tableModels', {cache: true}).then(
+                (res)->
+                    for r in res
+                        dataManager.cacheObject("rest/creation/tableModels/#{r.key}", r)
+                (err)->
+                    console.error err
+            )
+            dataManager.get('/rest/creation/billModels', {cache: true}).then(
+                (res)->
+                    for r in res
+                        dataManager.cacheObject("rest/creation/billModels/#{r.key}", r)
+                (err)->
+                    console.error err
+            )
+            dataManager.get('/rest/creation/viewModels', {cache: true}).then(
+                (res)->
+                    for r in res
+                        dataManager.cacheObject("rest/creation/viewModels/#{r.key}", r)
+                (err)->
+                    console.error err
+            )
+            console.log 'app cache initialized'
+
     }
     app

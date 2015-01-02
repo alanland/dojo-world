@@ -20,7 +20,7 @@ define [
 
         getBill: (typeValue)->
             # todo cache
-            @_service.getBillDefinition(typeValue)
+            @_service.getViewModel(typeValue)
 
 
         get: (tid)->
