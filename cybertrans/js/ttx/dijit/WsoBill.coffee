@@ -10,6 +10,7 @@ define [
     'dojo/query'
     'dojo/on'
     'dojo/aspect'
+    'dojo/DeferredList'
     'dojo/store/Memory'
     'dijit/registry'
     'dijit/layout/ContentPane'
@@ -29,7 +30,7 @@ define [
     'ttx/command/actions/BillActionSet'
     'ttx/dijit/_TtxForm'
 ], (declare, lang, fx, dom, domClass, domStyle, domConstruct, domGeometry, query,
-    onn, aspect, Memory, #
+    onn, aspect, DeferredList, Memory, #
     registry, ContentPane, TabContainer, Form, TextBox, Button, _Container, Toolbar,
     at, getStateful, ModelRefController, #
     Grid, Cache, modules,
@@ -43,9 +44,10 @@ define [
         data: null
         dataResult: null
         wsoDef: null
-        wsoDefResult: null # 界面定义
-        wsoItems: {}
-        actions: []
+        viewModel: null # 界面定义
+        billModel: null
+        headerTableModel: null
+        lineTableModel: null
 
         app: null # app
         navigatorItem: {}
@@ -136,8 +138,9 @@ define [
             #       layout 方法，在resize时候触发
             @inherited arguments
 
-            cpListParentBox = domGeometry.getContentBox(@cpList.domNode.parentElement)
-            domGeometry.setMarginBox(@cpList.domNode, w: cpListParentBox.w, true)
+            if @cpList # todo layout 的次数？ 调用过多？
+                cpListParentBox = domGeometry.getContentBox(@cpList.domNode.parentElement)
+                domGeometry.setMarginBox(@cpList.domNode, w: cpListParentBox.w, true)
 
         layoutPane: (pane)->
             query('.ttx-field-set', pane.domNode).forEach (fieldSet)->
@@ -190,13 +193,22 @@ define [
         _continueWithData: (data) ->
             @dataResult = getStateful data;
             @ctrl = new ModelRefController model: @dataResult
-            if (@wsoDefResult)
+            if (@viewModel)
                 @_finishLoad()
 
         _continueWithWsoDef: (wsoDef) ->
-            @wsoDefResult = wsoDef;
-            #            if (@dataResult)
-            @_finishLoad();
+            @viewModel = wsoDef;
+            #            if (@dataResult) #todo
+            it = this
+            dataManager = @app.dataManager
+            dataManager.getBillModel(@viewModel.billKey).then (bd)->
+                it.billModel = bd
+                dl = new DeferredList(
+                    [dataManager.getTableModel(bd.header), dataManager.getTableModel(bd.detail)]
+                ).then (res)->
+                    it.headerTableModel = res[0][1]
+                    it.detailTableModel = res[1][1]
+                    it._finishLoad();
 
         _abortLoad: ->
             return if not @data
@@ -213,8 +225,8 @@ define [
             @_loading.innerHTML = "FAILED!!";
 
         _finishLoad: ->
-            if (@wsoDefResult.require) # todo 是否需要require
-                require @wsoDefResult.require, ->
+            if (@viewModel.require) # todo 是否需要require
+                require @viewModel.require, ->
             @_buildForm();
 
         _buildForm: ->
@@ -234,11 +246,11 @@ define [
             @addChild @cpDetail
 
             # 界面定义
-            wsoDef = @wsoDefResult
+            viewModel = @viewModel
 
             # 当前界面用户自定义 action 集合
             it = this
-            actionJs = wsoDef.actionJs
+            actionJs = viewModel.actionJs
             @actionSets.global = new BillActionSet(wso: @)
             if actionJs && actionJs.length > 0
                 try
@@ -248,16 +260,16 @@ define [
                     console.error err
 
             # 列表页
-            if wsoDef.list
-                @__buildCpList(wsoDef.list)
+            if viewModel.list
+                @__buildCpList(viewModel.list)
 
             # 内容页
-            if wsoDef.bill
-                @__buildCpBill(wsoDef.bill)
+            if viewModel.bill
+                @__buildCpBill(viewModel.bill)
 
             # 明细页
-            if wsoDef.detail
-                @__buildCpDetail(wsoDef.detail)
+            if viewModel.detail
+                @__buildCpDetail(viewModel.detail)
 
             @layout()
 
@@ -273,9 +285,11 @@ define [
             actionMap = cp.actionMap = {}
             @addTtxActionSet(def.actions, cp.domNode, actionMap)
             # 表格
-            cp.grid = @addTtxGrid(def.grid, cp.domNode)
+            url = "#{@app.server}/rest/cbt/#{@headerTableModel.key}"
+            cp.grid = @addTtxServerGrid(def.grid, cp.domNode, {}, url)
 
 #            @selectChild @cpList # todo
+
 
         __buildCpBill: (def)->
             cp = @cpBill
@@ -307,7 +321,7 @@ define [
             domConstruct.destroy(@_loading);
             delete @_loading;
 
-            wsoDef = @wsoDefResult
+            wsoDef = @viewModel
 
             if wsoDef and wsoDef.size
                 domStyle.set @domNode,

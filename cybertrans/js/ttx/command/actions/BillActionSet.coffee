@@ -1,32 +1,56 @@
 define [
     'dojo/_base/declare'
+    'dojo/_base/lang'
     'dojo/request'
-], (declare, request)->
+    'dojo/store/JsonRest'
+], (declare, lang, request, JsonRest)->
+    getCtrlData = (ctrl)->
+        data = lang.mixin({}, ctrl.model)
+        data.declaredClass = undefined
+        data._attrPairNames = undefined
+        data
+
     declare null, {
     # todo 事件支持传参数
 #        app: null
         wsoType: 'amd'
         wso: null
-#        queryForm: null
+
         constructor: (args)->
             # summary:
             #       构造
             @wso = args.wso
 
-        query: (e)->
+        query: (e)-> # 列表和查询
+            cp = @wso.cpList
+            ctrl = cp.ctrl
+            view = @wso.viewModel
+            bill = @wso.billModel
+            header = @wso.headerTableModel
+            detail = @wso.detailTableModel
+
+            res = []
+            for fdef in view.list.fields
+                if cp.ctrl.get(fdef.id) # 有值
+                    res.push {
+                        table: fdef.table
+                        field: fdef.field
+                        value: ctrl.get(fdef.id)
+                        opt: fdef.operator
+                    }
+
             if @wsoType != 'amd'
                 console.error('action type does not match wso type')
                 return
-            @wso.queryForm.onSubmit = ->
-                console.log this
-                alert(this)
-            console.log @wso.queryForm.getValues()
+            cp.grid.filter.setFilter(expr: {and: res})
+#            cp.grid.body.refresh()
+
         new: ->
+            # todo
             @wso.selectChild @wso.cpBill
-    # todo
         edit: ->
+            # todo
             @wso.selectChild @wso.cpBill
-    # todo
         delete: ->
             server = @wso.app.server
             grid = @wso.listGrid
@@ -39,8 +63,13 @@ define [
                 (data)->
                     grid.setStore(new Memory data: data)
             )
-        save: ->
-            '' #todo
+        create: ->
+            @wso.app.dataManager.post(
+                'rest/cbt/' + @wso.headerTableModel.key,
+                @wso.getCtrlData(@wso.cpBill.ctrl)
+            )
+        update: ->
+            ''
         reset: ->
             '' #todo
         newDetail: ->

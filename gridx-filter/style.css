@@ -1,0 +1,46 @@
+/*
+begin bootstrap hacks
+*/
+/*字体变小的问题*/
+html {
+    font-size: 100%;
+}
+
+/*table的border-collapse(collapse)*/
+table.normal {
+    border-spacing: 5px;
+    border-collapse: separate;
+}
+
+/*gridx表格最后一列多出来一块 bootstrap: border-box*/
+* {
+    -webkit-box-sizing: content-box;
+    -moz-box-sizing: content-box;
+    box-sizing: content-box;
+}
+
+/*end bootstrap hacks*/
+
+* {
+    font: 12px;
+}
+
+#myForm {
+    margin-bottom: 30px;
+}
+
+#gridNode {
+    /*width: 400px;*/
+}
+
+table.normal {
+    border: 1px solid #9f9f9f;
+}
+
+.gridxRowHeaderRow table .gridxCell, .gridxRow .gridxRowTable .gridxCell {
+    padding: 0;
+}
+
+.gridxGroupHeader, .gridxHeaderRow .gridxCell {
+    padding: 0;
+}

@@ -52,7 +52,7 @@ define [
         data: null
         dataResult: null
         wsoDef: null
-        wsoDefResult: null
+        viewModel: null
         wsoItems: {}
         actions: []
         navigator: {}
@@ -321,11 +321,11 @@ define [
         _continueWithData: (data) ->
             @dataResult = getStateful data;
             @ctrl = new ModelRefController model: @dataResult
-            if (@wsoDefResult)
+            if (@viewModel)
                 @_finishLoad();
 
         _continueWithWsoDef: (wsoDef) ->
-            @wsoDefResult = wsoDef;
+            @viewModel = wsoDef;
             if (@dataResult)
                 @_finishLoad();
 
@@ -344,8 +344,8 @@ define [
             @_loading.innerHTML = "FAILED!!";
 
         _finishLoad: ->
-            if (@wsoDefResult.require) # todo 是否需要require
-                require @wsoDefResult.require, ->
+            if (@viewModel.require) # todo 是否需要require
+                require @viewModel.require, ->
             @_buildForm();
 
         _buildForm: ->
@@ -358,7 +358,7 @@ define [
             delete @_loading
 
 
-            wsoDef = @wsoDefResult
+            wsoDef = @viewModel
             ## todo
             for itemDef in wsoDef
                 @addWsoItemDef itemDef, @containerNode
@@ -374,7 +374,7 @@ define [
             domConstruct.destroy(@_loading);
             delete @_loading;
 
-            wsoDef = @wsoDefResult
+            wsoDef = @viewModel
 
             if wsoDef and wsoDef.size
                 domStyle.set @domNode,

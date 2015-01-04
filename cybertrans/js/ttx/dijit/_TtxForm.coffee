@@ -27,6 +27,7 @@ define [
     'dojox/mvc/ModelRefController'
     'gridx/Grid',
     'gridx/core/model/cache/Sync'
+    'gridx/core/model/cache/Async'
     'gridx/allModules'
     'ttx/util'
 ], (declare, lang, Deferred,
@@ -36,7 +37,7 @@ define [
     Form, Button, DropDownButton, ComboButton, TextBox, FilteringSelect,
     ContentPane,
     at, getStateful, ModelRefController,
-    Grid, Cache, modules,
+    Grid, Cache, ACache, modules,
     util)->
     defaultDropDown = new TooltipDialog({content: "未实现的下拉操作"})
     declare null, {
@@ -132,7 +133,7 @@ define [
                         btn = new DropDownButton widgetArgs
                 else # 下拉表单
                     if def.action # 指定tooltip函数 @newGridAddRowButton 表示回调函数 # todo 会造成布局失败
-                       # btn = this[def.action].call this, args, widgetArgs # todo dropDown
+                        # btn = this[def.action].call this, args, widgetArgs # todo dropDown
                         btn = new DropDownButton widgetArgs
                     else
                         btn = new DropDownButton widgetArgs
@@ -207,6 +208,7 @@ define [
                 modules.RowHeader,
                 modules.IndirectSelect,
                 modules.ExtendedSelectRow,
+                modules.Filter,
 #                modules.MoveRow,
 #                modules.DndRow,
                 modules.VirtualVScroller
@@ -241,6 +243,31 @@ define [
             listToolbar = new Toolbar {actionMap: {}}
             # 列表Grid
             grid = @addGridx(listDiv, new Memory(data: []), def.structure, lang.mixin({
+                barTop: [{content: '<h1>' + def.name || '' + ' </h1>'}, listToolbar]
+            }, args))
+            filterServerMode: true,
+            filterSetupFilterQuery: (expr)->
+                @grid.store.headers["filter"] = JSON.stringify(expr)
+                ''
+            if def.actions
+                for adef in def.actions
+                    btn = @newTtxAction(adef, {}, grid)
+                    listToolbar.actionMap[adef.id] = btn
+                    listToolbar.addChild btn
+            grid
+        addTtxServerGrid: (def, domNode, args,url)->
+            # 列表容器
+            listDiv = domConstruct.create 'div', {class: 'listGridContainer'}, domNode
+            # 列表工具栏
+            listToolbar = new Toolbar {actionMap: {}}
+            # 列表Grid
+            args = lang.mixin({
+                filterServerMode: true,
+                filterSetupFilterQuery: (expr)->
+                    @grid.store.headers["filter"] = JSON.stringify(expr)
+                    ''
+            },args)
+            grid = @addGridx(listDiv, new JsonRest(target: url), def.structure, lang.mixin({
                 barTop: [{content: '<h1>' + def.name || '' + ' </h1>'}, listToolbar]
             }, args))
 
@@ -280,14 +307,14 @@ define [
                 {"id": "field", "type": "filteringSelect", "field": "field", "name": "Field"},
                 {"id": "name", "type": "string", "field": "name", "name": "name"}
             ]
-#            tip = @newGridAddRowTooltip fdefs, grid
-#            btn = new DropDownButton widgetArgs
-#            btn.set 'dropDown', tip
-##            btn.startup()
-#            btn
+            #            tip = @newGridAddRowTooltip fdefs, grid
+            #            btn = new DropDownButton widgetArgs
+            #            btn.set 'dropDown', tip
+            ##            btn.startup()
+            #            btn
 
 
-            defaultValues={}
+            defaultValues = {}
 
             # grid new action tooltip
             tipCp = new Form()

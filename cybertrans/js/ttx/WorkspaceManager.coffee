@@ -64,14 +64,14 @@ define [
             # TODO: search for non-current, but loaded object
             #            if tid.startsWith('amd')
 
-            thiz = this
+            it = this
             newWso = null
             if type == 'amd'
 #                require {async: false}, ['ttx/dijit/wso/Creation'], (Creation)->
 #                    alert(1)
 #                    newWso = new Creation(app: @app)
                 require {async: false}, [tid], (amdType)->
-                    newWso = new amdType(app: thiz.app)
+                    newWso = new amdType(app: it.app)
             else if type == 'bill'
                 defDeferred = @app.wsoDefinitionsManager.getBill tid
                 newWso = new WsoBill(
@@ -88,8 +88,8 @@ define [
                 ''
             # 显示新的当前界面
             if @useTab
-                sameType = @getWsoByType(item)
-                if sameType.length > 0
+                sameType = @getWsoByType(item) # todo
+                if sameType and sameType.length > 0
                     @wsoContainer.selectChild sameType[0]
                 else
                     @wsoContainer.addChild newWso

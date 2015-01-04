@@ -113,5 +113,10 @@ define [
             }, options))
 
 
-        getViewModel: (view)-> # 获取单据界面定义
-            @get("rest/creation/viewModels/#{view}", {cache: true})
+        getViewModel: (key)-> # 获取单据界面定义
+            @get("rest/creation/viewModels/#{key}", {cache: true})
+        getBillModel: (key)->
+            @get("rest/creation/billModels/#{key}", {cache: true})
+        getTableModel: (key)->
+            @get("rest/creation/tableModels/#{key}", {cache: true})
+
