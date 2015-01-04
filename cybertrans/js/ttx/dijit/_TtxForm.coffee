@@ -202,7 +202,7 @@ define [
             menu.startup()
             menu
 
-        addGridx: (container, store, structure, args)->
+        addGridx: (container, structure, args)->
             defaultModules = [
                 modules.Bar,
                 modules.RowHeader,
@@ -224,7 +224,6 @@ define [
                 args.modules = defaultModules
             g = new Grid(lang.mixin({
                 cacheClass: Cache
-                store: store
                 structure: structure
                 selectRowTriggerOnCell: true
                 paginationBarMessage: "[ ${2} 到 ${3} ] (共 ${0} ), 已选择 ${1} 条",
@@ -242,7 +241,8 @@ define [
             # 列表工具栏
             listToolbar = new Toolbar {actionMap: {}}
             # 列表Grid
-            grid = @addGridx(listDiv, new Memory(data: []), def.structure, lang.mixin({
+            grid = @addGridx(listDiv, def.structure, lang.mixin({
+                store:new Memory(data:[])
                 barTop: [{content: '<h1>' + def.name || '' + ' </h1>'}, listToolbar]
             }, args))
             if def.actions
@@ -251,13 +251,14 @@ define [
                     listToolbar.actionMap[adef.id] = btn
                     listToolbar.addChild btn
             grid
-        addTtxServerGrid: (def, domNode, args, url)->
+        addTtxServerGrid: (def, domNode, args)->
             # 列表容器
             listDiv = domConstruct.create 'div', {class: 'listGridContainer'}, domNode
             # 列表工具栏
             listToolbar = new Toolbar {actionMap: {}}
             # 列表Grid
             args = lang.mixin({
+                store: new Memory(data:{})
                 filterServerMode: true,
                 filterSetupFilterQuery: (expr)->
                     @grid.store.headers["filter"] = JSON.stringify(expr)
@@ -267,7 +268,6 @@ define [
             }, args)
             grid = @addGridx(
                 listDiv,
-                new JsonRest(target: url, idProperty: @headerTableModel.idColumnName),
                 def.structure, lang.mixin({
                     cacheClass: AsyncCache
                     barTop: [{content: '<h1>' + def.name || '' + ' </h1>'}, listToolbar],

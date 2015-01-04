@@ -12,6 +12,7 @@ define [
     'dojo/aspect'
     'dojo/DeferredList'
     'dojo/store/Memory'
+    'dojo/store/JsonRest'
     'dijit/registry'
     'dijit/layout/ContentPane'
     'dijit/layout/TabContainer'
@@ -30,7 +31,7 @@ define [
     'ttx/command/actions/BillActionSet'
     'ttx/dijit/_TtxForm'
 ], (declare, lang, fx, dom, domClass, domStyle, domConstruct, domGeometry, query,
-    onn, aspect, DeferredList, Memory, #
+    onn, aspect, DeferredList, Memory, JsonRest,
     registry, ContentPane, TabContainer, Form, TextBox, Button, _Container, Toolbar,
     at, getStateful, ModelRefController, #
     Grid, Cache, modules,
@@ -57,7 +58,7 @@ define [
             default: {}
         }
 
-        cpTmp : new ContentPane()
+        cpTmp: new ContentPane()
         cpList: null # content pane 1
         cpBill: null # content pane 2
         cpDetail: null # content pane 3
@@ -277,11 +278,12 @@ define [
             if viewModel.detail
                 @__buildCpDetail(viewModel.detail)
 
-#            @removeChild @cpTmp
+            #            @removeChild @cpTmp
             @layout()
 #            @selectChild @cpList
 
         __buildCpList: (def)->
+            it = this
             cp = @cpList
             # 字段
             form = cp.form = new Form()
@@ -294,9 +296,15 @@ define [
             @addTtxActionSet(def.actions, cp.domNode, actionMap)
             # 表格
             url = "#{@app.server}/rest/cbt/#{@headerTableModel.key}"
-            cp.grid = @addTtxServerGrid(def.grid, cp.domNode, {}, url)
+            cp.grid = @addTtxServerGrid(def.grid, cp.domNode, {
+                store: new JsonRest(target: url, idProperty: @headerTableModel.idColumnName)
+            })
+            onn cp.grid, 'cellDblClick', (evt)->
+                item = cp.grid.row(evt.rowIndex).item()
+                it.actionSets.global.edit.call(it.actionSets.global, item)
 
         __buildCpBill: (def)->
+            it = this
             cp = @cpBill
             # 操作
             actionMap = cp.actionMap = {}
@@ -308,7 +316,13 @@ define [
             fieldMap = cp.fieldMap = {}
             @addTtxFieldSet(def.fields, ctrl, def.columns, form.domNode, fieldMap)
             # 表格
-            cp.grid = @addTtxGrid(def.grid, cp.domNode)
+            url = "#{@app.server}/rest/cbt/#{@detailTableModel.key}" # todo 如何不加载数据
+            cp.grid = @addTtxServerGrid(def.grid, cp.domNode, {
+                store: new JsonRest(target: url, idProperty: @detailTableModel.idColumnName)
+            })
+            onn cp.grid, 'cellDblClick', (evt)->
+                item = cp.grid.row(evt.rowIndex).item()
+                it.actionSets.global.editDetail.call(it.actionSets.global, item)
 
         __buildCpDetail: (def)->
             cp = @cpDetail

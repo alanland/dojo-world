@@ -258,7 +258,7 @@ define [
             for adef in gridDef.actions
                 listToolbar.addChild @newTtxAction(adef)
             # 列表Grid
-            grid = @addGridx(listDiv, new Memory(data: []), gridDef.structure, {
+            grid = @addGridx(listDiv, gridDef.structure, {
                 barTop: [{content: '<h1>' + gridDef.name || '' + ' </h1>'}, listToolbar],
                 modules: [
                     modules.MoveRow,
