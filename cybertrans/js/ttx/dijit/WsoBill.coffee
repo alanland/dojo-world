@@ -57,6 +57,7 @@ define [
             default: {}
         }
 
+        cpTmp : new ContentPane()
         cpList: null # content pane 1
         cpBill: null # content pane 2
         cpDetail: null # content pane 3
@@ -107,13 +108,15 @@ define [
             @wsoDef.then(
                 (data)->
                     it._continueWithWsoDef(data)
+
+                    it.own(aspect.after it, 'selectChild', ()->
+                            pane = arguments[1][0]
+                            it.layoutPane pane
+                        true,)
                 (err)->
                     console.log(err)
             )
-            this.own(aspect.after @, 'selectChild', ()->
-                    pane = arguments[1][0]
-                    it.layoutPane pane
-                true,)
+    # todo
 
 #            @data.then (data)->
 #                thiz._continueWithData(data);
@@ -138,9 +141,11 @@ define [
             #       layout 方法，在resize时候触发
             @inherited arguments
 
-            if @cpList # todo layout 的次数？ 调用过多？
-                cpListParentBox = domGeometry.getContentBox(@cpList.domNode.parentElement)
-                domGeometry.setMarginBox(@cpList.domNode, w: cpListParentBox.w, true)
+#            if @cpList # todo layout 的次数？ 调用过多？
+#                cpListParentBox = domGeometry.getContentBox(@cpList.domNode.parentElement)
+#                if cpListParentBox.w == 0
+#                    cpListParentBox = domGeometry.getContentBox(@cpList.domNode.parentElement.parentElement)
+#                domGeometry.setMarginBox(@cpList.domNode, w: cpListParentBox.w, true)
 
         layoutPane: (pane)->
             query('.ttx-field-set', pane.domNode).forEach (fieldSet)->
@@ -238,6 +243,7 @@ define [
             domConstruct.destroy @_loading
             delete @_loading
 
+            @addChild @cpTmp
             cpList = @cpList = new ContentPane(title: '用户查询')
             @addChild @cpList
             cpBill = @cpBill = new ContentPane(title: '内容')
@@ -271,14 +277,16 @@ define [
             if viewModel.detail
                 @__buildCpDetail(viewModel.detail)
 
+#            @removeChild @cpTmp
             @layout()
+#            @selectChild @cpList
 
         __buildCpList: (def)->
             cp = @cpList
             # 字段
             form = cp.form = new Form()
             cp.addChild form
-            ctrl = cp.ctrl = new ModelRefController model: getStateful {code: 'code', name: 'name', hintCode: 'hintcode'}
+            ctrl = cp.ctrl = new ModelRefController model: getStateful {}
             fieldMap = cp.fieldMap = {}
             @addTtxFieldSet(def.fields, ctrl, def.columns, form.domNode, fieldMap)
             # 操作
@@ -287,9 +295,6 @@ define [
             # 表格
             url = "#{@app.server}/rest/cbt/#{@headerTableModel.key}"
             cp.grid = @addTtxServerGrid(def.grid, cp.domNode, {}, url)
-
-#            @selectChild @cpList # todo
-
 
         __buildCpBill: (def)->
             cp = @cpBill

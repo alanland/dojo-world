@@ -36,13 +36,20 @@ define [
                         table: fdef.table
                         field: fdef.field
                         value: ctrl.get(fdef.id)
-                        opt: fdef.operator
+                        operator: fdef.operator
                     }
 
             if @wsoType != 'amd'
                 console.error('action type does not match wso type')
                 return
+#            cp.grid.setStore(new JsonRest {
+#                target: cp.grid.store.target
+#                idProperty: cp.grid.store.idProperty
+#            })
+#            cp.grid.model.clearCache()
             cp.grid.filter.setFilter(expr: {and: res})
+#            cp.grid.pagination._updateBody()
+#            cp.grid.pagination.gotoPage(0)
 #            cp.grid.body.refresh()
 
         new: ->

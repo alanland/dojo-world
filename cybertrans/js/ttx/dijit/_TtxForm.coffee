@@ -37,7 +37,7 @@ define [
     Form, Button, DropDownButton, ComboButton, TextBox, FilteringSelect,
     ContentPane,
     at, getStateful, ModelRefController,
-    Grid, Cache, ACache, modules,
+    Grid, Cache, AsyncCache, modules,
     util)->
     defaultDropDown = new TooltipDialog({content: "未实现的下拉操作"})
     declare null, {
@@ -208,7 +208,7 @@ define [
                 modules.RowHeader,
                 modules.IndirectSelect,
                 modules.ExtendedSelectRow,
-                modules.Filter,
+#                modules.Filter,
 #                modules.MoveRow,
 #                modules.DndRow,
                 modules.VirtualVScroller
@@ -245,17 +245,13 @@ define [
             grid = @addGridx(listDiv, new Memory(data: []), def.structure, lang.mixin({
                 barTop: [{content: '<h1>' + def.name || '' + ' </h1>'}, listToolbar]
             }, args))
-            filterServerMode: true,
-            filterSetupFilterQuery: (expr)->
-                @grid.store.headers["filter"] = JSON.stringify(expr)
-                ''
             if def.actions
                 for adef in def.actions
                     btn = @newTtxAction(adef, {}, grid)
                     listToolbar.actionMap[adef.id] = btn
                     listToolbar.addChild btn
             grid
-        addTtxServerGrid: (def, domNode, args,url)->
+        addTtxServerGrid: (def, domNode, args, url)->
             # 列表容器
             listDiv = domConstruct.create 'div', {class: 'listGridContainer'}, domNode
             # 列表工具栏
@@ -265,11 +261,26 @@ define [
                 filterServerMode: true,
                 filterSetupFilterQuery: (expr)->
                     @grid.store.headers["filter"] = JSON.stringify(expr)
+                    if grid.pagination # todo
+                        @grid.store.headers['Range'] = 'items=0-' + @grid.pagination.pageSize()
                     ''
-            },args)
-            grid = @addGridx(listDiv, new JsonRest(target: url), def.structure, lang.mixin({
-                barTop: [{content: '<h1>' + def.name || '' + ' </h1>'}, listToolbar]
-            }, args))
+            }, args)
+            grid = @addGridx(
+                listDiv,
+                new JsonRest(target: url, idProperty: @headerTableModel.idColumnName),
+                def.structure, lang.mixin({
+                    cacheClass: AsyncCache
+                    barTop: [{content: '<h1>' + def.name || '' + ' </h1>'}, listToolbar],
+                    modules: [
+                        modules.Pagination,
+                        modules.PaginationBar
+                        modules.Filter
+                    ]
+                }, args)
+            )
+#            grid.filter.onFilter = -> # todo
+#                alert(1)
+#                grid.pagination._updateBody()
 
             if def.actions
                 for adef in def.actions
