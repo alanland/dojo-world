@@ -77,8 +77,6 @@ define [
         buildRendering: ->
             # summary:
             #       TODO 显示加载动画，现在是一个 p
-            #       设置 containerNode
-            #       生成 buttonContainer, fieldContainer
             @inherited arguments
             #TODO: make this better...
             @_loading = domConstruct.toDom '''
@@ -170,8 +168,15 @@ define [
             @addTtxActionSet(def.actions, cp.domNode, actionMap)
             # 表格
             url = @app.dataManager.getTableRestUrl(@headerTableModel.key)
+            storeArgs = {
+                target: url,
+                idProperty: @headerTableModel.idColumnName,
+                muteQuery: true,
+                headers: {'X-Result-Fields': @_getGridFieldsToRequest(@headerTableModel, @viewModel.list.grid)}
+            }
             cp.grid = @addTtxServerGrid(def.grid, cp.domNode, {
-                store: new JsonRest(target: url, idProperty: @headerTableModel.idColumnName)
+                storeArgs: storeArgs
+                store: new JsonRest(storeArgs)
             })
             onn cp.grid, 'cellDblClick', (evt)->
                 item = cp.grid.row(evt.rowIndex).item()
@@ -190,8 +195,15 @@ define [
             @addTtxFieldSet(def.fields, ctrl, def.columns, form.domNode, fieldMap)
             # 表格
             url = @app.dataManager.getTableRestUrl(@detailTableModel.key) # todo 如何不加载数据
+            storeArgs = {
+                target: url,
+                idProperty: @detailTableModel.idColumnName,
+                muteQuery: true,
+                headers: {'X-Result-Fields': @_getGridFieldsToRequest(@detailTableModel, @viewModel.bill.grid)}
+            }
             cp.grid = @addTtxServerGrid(def.grid, cp.domNode, {
-                store: new JsonRest(target: url, idProperty: @detailTableModel.idColumnName, muteQuery: true)
+                storeArgs: storeArgs
+                store: new JsonRest(storeArgs)
             })
             onn cp.grid, 'cellDblClick', (evt)->
                 item = cp.grid.row(evt.rowIndex).item()
@@ -207,6 +219,15 @@ define [
             ctrl = cp.ctrl = new ModelRefController model: getStateful {}
             fieldMap = cp.fieldMap = {}
             @addTtxFieldSet(def.fields, ctrl, def.columns, form.domNode, fieldMap)
+
+        _getGridFieldsToRequest: (tableModel, gridDf)->
+            # 获取表格要向服务端请求的字段
+            res = [tableModel.idColumnName]
+            for item in gridDf.structure
+                console.log item
+                if res.indexOf(item.field) < 0
+                    res.push item.field
+            res.join ','
 
         layoutPane: (dom)->
             query('.ttx-field-set', dom).forEach (set)->

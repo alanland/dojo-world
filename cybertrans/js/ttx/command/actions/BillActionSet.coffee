@@ -6,7 +6,7 @@ define [
     'dojox/mvc/getStateful'
     'dojox/mvc/ModelRefController'
 ], (declare, lang, request, JsonRest, getStateful, ModelRefController)->
-    getCtrlData = (ctrl)->
+    getCtrlData = (ctrl)-> # todo 独立到单独模块
         data = lang.mixin({}, ctrl.model)
         data.declaredClass = undefined
         data._attrPairNames = undefined
@@ -50,6 +50,7 @@ define [
             #                idProperty: cp.grid.store.idProperty
             #            })
             #            cp.grid.model.clearCache()
+            cp.grid.store.muteQuery = false
             cp.grid.filter.setFilter(expr: {and: res})
 #            cp.grid.pagination._updateBody()
 #            cp.grid.pagination.gotoPage(0)
@@ -59,10 +60,14 @@ define [
             it = @wso
             @wso.tc.selectChild @wso.cpBill
 
-
+            # 单头字段
             ctrl = it.cpBill.ctrl
             for k,v of getCtrlData(ctrl)
                 ctrl.set k, '' if !lang.isFunction(v)
+            # 明细
+            it.cpBill.grid.store.muteQuery = true
+            it.cpBill.grid.model.clearCache()
+            it.cpBill.grid.body.refresh()
 
         edit: (item)->
             it = @wso
