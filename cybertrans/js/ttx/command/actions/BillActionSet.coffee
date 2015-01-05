@@ -2,7 +2,7 @@ define [
     'dojo/_base/declare'
     'dojo/_base/lang'
     'dojo/request'
-    'dojo/store/JsonRest'
+    'ttx/store/JsonRest'
     'dojox/mvc/getStateful'
     'dojox/mvc/ModelRefController'
 ], (declare, lang, request, JsonRest, getStateful, ModelRefController)->
@@ -10,6 +10,7 @@ define [
         data = lang.mixin({}, ctrl.model)
         data.declaredClass = undefined
         data._attrPairNames = undefined
+        data._watchCallbacks = undefined
         data
 
     declare null, {
@@ -55,8 +56,14 @@ define [
 #            cp.grid.body.refresh()
 
         new: ->
-            # todo
+            it = @wso
             @wso.tc.selectChild @wso.cpBill
+
+
+            ctrl = it.cpBill.ctrl
+            for k,v of getCtrlData(ctrl)
+                ctrl.set k, '' if !lang.isFunction(v)
+
         edit: (item)->
             it = @wso
             view = @wso.viewModel
@@ -72,6 +79,7 @@ define [
                     it.cpBill.ctrl.set k, v
 
             where = [{field: bill.subordinate, value: id}]
+            it.cpBill.grid.store.muteQuery = false
             it.cpBill.grid.filter.setFilter(expr: {and: where})
 
         delete: ->
@@ -111,14 +119,14 @@ define [
         deleteDetail: ->
             '' #todo
         createDetail: ->
-            it=@wso
+            it = @wso
             it.app.dataManager.post(
                 'rest/cbt/' + @wso.detailTableModel.key,
                 @wso.getCtrlData(@wso.cpDetail.ctrl)
             ).then ->
                 it.cpBill.grid.model.clearCache()
                 it.cpBill.grid.body.refresh()
-        updateDetail:->
+        updateDetail: ->
             ''
         resetDetail: ->
             '' # todo

@@ -1,7 +1,7 @@
 define [
     'dojo/_base/lang'
     'dojo/dom-construct'
-    'dojo/store/JsonRest'
+    'ttx/store/JsonRest'
     'dijit/layout/BorderContainer'
     'dijit/layout/ContentPane'
     'ttx/WorkspaceManager'

@@ -8,7 +8,7 @@ define [
     'dojo/query'
     'dojo/request'
     'dojo/store/Memory'
-    'dojo/store/JsonRest'
+    'ttx/store/JsonRest'
     'dijit/TitlePane'
     'dijit/Toolbar'
     'dijit/TooltipDialog'
@@ -232,7 +232,7 @@ define [
                 modules: defaultModules
             }, args));
             g.placeAt(container)
-            g.startup()
+#            g.startup()
             g
 
         addTtxGrid: (def, domNode, args)->
@@ -278,9 +278,6 @@ define [
                     ]
                 }, args)
             )
-#            grid.filter.onFilter = -> # todo
-#                alert(1)
-#                grid.pagination._updateBody()
 
             if def.actions
                 for adef in def.actions

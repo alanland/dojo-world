@@ -122,6 +122,5 @@ define [
             request(dataServer + 'billDefinition/' + tid, {handleAs: 'json'})
 
         getTableRestUrl: (tableKey)->
-            console.log "#{@app.server}/rest/cbt/#{tableKey}"
             "#{@app.server}/rest/cbt/#{tableKey}"
 

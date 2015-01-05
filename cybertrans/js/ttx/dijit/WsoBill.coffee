@@ -12,7 +12,7 @@ define [
     'dojo/aspect'
     'dojo/DeferredList'
     'dojo/store/Memory'
-    'dojo/store/JsonRest'
+    'ttx/store/JsonRest'
     'dijit/registry'
     'dijit/layout/ContentPane'
     'dijit/layout/TabContainer'
