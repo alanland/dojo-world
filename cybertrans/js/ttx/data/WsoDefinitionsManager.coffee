@@ -15,7 +15,8 @@ define [
 
         constructor: (args)->
 #            @_service = args.wsoDefinitionsService;
-            @_service = new DataManager()
+            @app = args.app
+            @_service = @app.dataManager
             @_cache = [];
 
         getBill: (typeValue)->

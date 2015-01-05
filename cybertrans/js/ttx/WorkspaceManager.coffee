@@ -4,10 +4,9 @@ define [
     'dojo/topic',
     'dijit/layout/ContentPane'
     'dijit/layout/TabContainer'
-    'ttx/dijit/Wso'
-    'ttx/dijit/WsoBill'
-], (declare, lang, topic, ContentPane, TabContainer, Wso, WsoBill)->
-    nullObjectValue = {type: -2, tid: -2, oid: -2,nid:-2, form: null}
+    'ttx/dijit/wso/Bill'
+], (declare, lang, topic, ContentPane, TabContainer, Bill)->
+    nullObjectValue = {type: -2, tid: -2, oid: -2, nid: -2, form: null}
     declare null,
         app: null
         current: {}
@@ -71,16 +70,16 @@ define [
 #                    alert(1)
 #                    newWso = new Creation(app: @app)
                 require {async: false}, [tid], (amdType)->
-                    newWso = new amdType(app: it.app)
+                    newWso = new amdType(app: it.app, workspace: @wsoContainer)
             else if type == 'bill'
-                defDeferred = @app.wsoDefinitionsManager.getBill tid
-                newWso = new WsoBill(
-                    data: []
-                    wsoDef: defDeferred
-                    closable: true
+                viewModelDeferred = @app.wsoDefinitionsManager.getBill tid
+                newWso = new Bill(
+                    viewModelDeferred: viewModelDeferred
+#                    closable: true
                     navigatorItem: item
                     title: item.name
                     app: @app
+                    workspace: @wsoContainer
                 )
             else if type == 'wso'
                 ''
@@ -99,7 +98,7 @@ define [
                 @destroyCurrent()
                 @wsoContainer.addChild newWso
 
-#            @wsoContainer.startup()
+            #            @wsoContainer.startup()
 
             # record the current state...
             lang.mixin @current, {

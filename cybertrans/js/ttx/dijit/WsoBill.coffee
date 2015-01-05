@@ -99,7 +99,7 @@ define [
 #            @fieldContainer = domConstruct.create 'div', {class: 'wsoFieldContainer'}, @domNode
 #            @containerNode = domConstruct.create 'div', {class: 'wsoContainerNode'}, @domNode
 
-        startup: ->
+        postCreate: ->
             # summary:
             #       生成控制器
             #       todo 等待 wso 定义获取到之后生成表单

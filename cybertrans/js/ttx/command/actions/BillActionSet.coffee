@@ -56,14 +56,14 @@ define [
 
         new: ->
             # todo
-            @wso.selectChild @wso.cpBill
+            @wso.tc.selectChild @wso.cpBill
         edit: (item)->
             it = @wso
             view = @wso.viewModel
             bill = @wso.billModel
             header = @wso.headerTableModel
             detail = @wso.detailTableModel
-            @wso.selectChild @wso.cpBill
+            @wso.tc.selectChild @wso.cpBill
 
             id = item[header.idColumnName]
             tableKey = header.key
@@ -93,7 +93,7 @@ define [
         reset: ->
             '' #todo
         newDetail: ->
-            @wso.selectChild @wso.cpDetail
+            @wso.tc.selectChild @wso.cpDetail
             '' #todo
         editDetail: (item)->
             it = @wso
@@ -106,7 +106,7 @@ define [
             it.app.dataManager.get("rest/cbt/#{tableKey}/#{id}").then (data)->
                 for k,v of data
                     it.cpDetail.ctrl.set k, v
-            @wso.selectChild @wso.cpDetail
+            @wso.tc.selectChild @wso.cpDetail
 
         deleteDetail: ->
             '' #todo

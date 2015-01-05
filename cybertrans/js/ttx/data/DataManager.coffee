@@ -38,6 +38,7 @@ define [
 #                @service = args.dataService # todo
 #            else
 #                @service = new TestData({}) # todo
+            @app = args.app
             @cache = new Memory(data: [], idProperty: cacheIdProp)
 
         cacheObject: (key, value)->
@@ -119,4 +120,8 @@ define [
             @get("rest/creation/tableModels/#{key}", {cache: true})
         getBillDefinition: (tid)-> # 用来获取基于文件的json
             request(dataServer + 'billDefinition/' + tid, {handleAs: 'json'})
+
+        getTableRestUrl: (tableKey)->
+            console.log "#{@app.server}/rest/cbt/#{tableKey}"
+            "#{@app.server}/rest/cbt/#{tableKey}"
 
