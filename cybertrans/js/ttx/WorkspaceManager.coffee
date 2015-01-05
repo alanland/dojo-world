@@ -7,7 +7,7 @@ define [
     'ttx/dijit/Wso'
     'ttx/dijit/WsoBill'
 ], (declare, lang, topic, ContentPane, TabContainer, Wso, WsoBill)->
-    nullObjectValue = {type: 0, oid: 0, form: null}
+    nullObjectValue = {type: -2, tid: -2, oid: -2,nid:-2, form: null}
     declare null,
         app: null
         current: {}
@@ -86,6 +86,7 @@ define [
                 ''
             else
                 ''
+
             # 显示新的当前界面
             if @useTab
                 sameType = @getWsoByType(item) # todo
@@ -97,9 +98,8 @@ define [
             else
                 @destroyCurrent()
                 @wsoContainer.addChild newWso
-            newWso.startup()
 
-            @wsoContainer.startup()
+#            @wsoContainer.startup()
 
             # record the current state...
             lang.mixin @current, {
@@ -115,10 +115,28 @@ define [
         destroyCurrent: ->
             # destroyDescendants
             # destroyRecursive
-            if not @useTab && @current.form
-                @wsoContainer.removeChild @current.form
-                @current.form.destroyDescendants()
-                delete @current.form
+            current = this.current
+            if (current.form)
+                try
+                    @wsoContainer.removeChild(current.form);
+                    current.form.destroyRecursive();
+
+
+            current = nullObjectValue;
+
+#            if not @useTab && @current.form
+#                @current.form = undefined
+#                for child in @wsoContainer.getChildren()
+#                    @wsoContainer.removeChild(child)
+#                    try
+#                        child.destroy
+#                        child.destroyRecursive()
+#                    catch e
+#                        console.error e
+##                @wsoContainer.removeChild @current.form
+##                @current.form.destroyRecursive()
+#                delete @current.form
+
 #            current = @current = {}
 
 

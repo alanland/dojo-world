@@ -99,7 +99,7 @@ define [
 #            @fieldContainer = domConstruct.create 'div', {class: 'wsoFieldContainer'}, @domNode
 #            @containerNode = domConstruct.create 'div', {class: 'wsoContainerNode'}, @domNode
 
-        postCreate: ->
+        startup: ->
             # summary:
             #       生成控制器
             #       todo 等待 wso 定义获取到之后生成表单
@@ -114,6 +114,7 @@ define [
                             pane = arguments[1][0]
                             it.layoutPane pane
                         true,)
+#                    it.selectChild it.cpBill
                 (err)->
                     console.log(err)
             )

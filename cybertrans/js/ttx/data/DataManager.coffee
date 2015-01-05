@@ -7,7 +7,8 @@ define [
     'dojo/store/Memory'
 ], (declare, lang, array, request, Deferred, Memory)->
     server = 'http://localhost:9000/'
-    dataServer = 'http://localhost:9000/rest/data/'
+    dataServer = 'http://localhost:9000/rest/jf/'
+#    dataServer = 'http://localhost:9000/rest/data/'
     declare 'TestData', [],
         constructor: (args)->
             @delay = args.delay || 100
@@ -55,9 +56,6 @@ define [
         getWsoDefinition: (tid)-> ## todo @Deprecated
             console.error 'deprecated'
             @get(dataServer + 'wsoDefinition/' + tid, {cache: true})
-        getBillDefinition: (tid)-> ## todo @Deprecated
-            console.error 'deprecated'
-            request(dataServer + 'billDefinition/' + tid, {handleAs: 'json'})
 
         get: (url, options = {})->
             options = lang.mixin {
@@ -119,4 +117,6 @@ define [
             @get("rest/creation/billModels/#{key}", {cache: true})
         getTableModel: (key)->
             @get("rest/creation/tableModels/#{key}", {cache: true})
+        getBillDefinition: (tid)-> # 用来获取基于文件的json
+            request(dataServer + 'billDefinition/' + tid, {handleAs: 'json'})
 
