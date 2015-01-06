@@ -232,17 +232,18 @@ define [
                 modules: defaultModules
             }, args));
             g.placeAt(container)
-#            g.startup()
+            #            g.startup()
             g
 
         addTtxGrid: (def, domNode, args)->
+            return if not def.structure || (def.structure.length == 0 and def.actions.length == 0 ) # 如果没定义
             # 列表容器
             listDiv = domConstruct.create 'div', {class: 'listGridContainer'}, domNode
             # 列表工具栏
             listToolbar = new Toolbar {actionMap: {}}
             # 列表Grid
             grid = @addGridx(listDiv, def.structure, lang.mixin({
-                store:new Memory(data:[])
+                store: new Memory(data: [])
                 barTop: [{content: '<h1>' + def.name || '' + ' </h1>'}, listToolbar]
             }, args))
             if def.actions
@@ -252,13 +253,14 @@ define [
                     listToolbar.addChild btn
             grid
         addTtxServerGrid: (def, domNode, args)->
+            return if not def.structure || (def.structure.length == 0 and def.actions.length == 0 )
             # 列表容器
             listDiv = domConstruct.create 'div', {class: 'listGridContainer'}, domNode
             # 列表工具栏
             listToolbar = new Toolbar {actionMap: {}}
             # 列表Grid
             args = lang.mixin({
-                store: new Memory(data:{})
+                store: new Memory(data: {})
                 filterServerMode: true,
                 filterSetupFilterQuery: (expr)->
                     @grid.store.headers["filter"] = JSON.stringify(expr)

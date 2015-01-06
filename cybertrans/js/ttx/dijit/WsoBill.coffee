@@ -27,7 +27,6 @@ define [
     'gridx/Grid',
     'gridx/core/model/cache/Sync'
     'gridx/allModules'
-    'ttx/util'# todo
     'ttx/command/actions/BillActionSet'
     'ttx/dijit/_TtxForm'
 ], (declare, lang, fx, dom, domClass, domStyle, domConstruct, domGeometry, query,
@@ -35,7 +34,7 @@ define [
     registry, ContentPane, TabContainer, Form, TextBox, Button, _Container, Toolbar,
     at, getStateful, ModelRefController, #
     Grid, Cache, modules,
-    WsoDefUtil, BillActionSet, _TtxForm) ->
+    BillActionSet, _TtxForm) ->
     declare [TabContainer, _Container, _TtxForm],
         # summary:
         #   Tab页展示　查询＼列表＼编辑的功能
