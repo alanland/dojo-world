@@ -194,7 +194,7 @@ define [
             fieldMap = cp.fieldMap = {}
             @addTtxFieldSet(def.fields, ctrl, def.columns, form.domNode, fieldMap)
             # 表格
-            url = @app.dataManager.getTableRestUrl(@detailTableModel.key) # todo 如何不加载数据
+            url = @app.dataManager.getTableRestUrl(@detailTableModel.key)
             storeArgs = {
                 target: url,
                 idProperty: @detailTableModel.idColumnName,
