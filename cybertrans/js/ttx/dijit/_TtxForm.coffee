@@ -31,7 +31,7 @@ define [
     'gridx/allModules'
     'ttx/util'
 ], (declare, lang, Deferred,
-    onn, domConstruct, domGeometry, query, request,
+    onn, domConstruct, geo, query, request,
     Memory, JsonRest,
     TitlePane, Toolbar, TooltipDialog, ConfirmTooltipDialog, Menu, MenuItem,
     Form, Button, DropDownButton, ComboButton, TextBox, FilteringSelect,
@@ -86,7 +86,11 @@ define [
             # todo type
             field = null
             switch def.type
-                when 'string' then field = new TextBox(name: def.field, value: at(ctrl, def.field))
+                when 'string' then field = new TextBox(
+                    name: def.field,
+                    value: at(ctrl, def.field)
+                    disabled: def.disabled
+                )
                 when 'filteringSelect'
                     field = new FilteringSelect(lang.mixin({
                             name: def.field,
@@ -288,23 +292,47 @@ define [
                     listToolbar.addChild btn
             grid
 
-        layoutFieldSetsPane: (pane)->
+        layoutFieldSetsPane: (pane)-> # todo
             # 查询pane所有的　fieldSet 进行布局
             query('.ttx-field-set', pane.domNode).forEach (fieldSet)->
-                setBox = domGeometry.getContentBox(fieldSet)
+                setBox = geo.getContentBox(fieldSet)
                 query('.ttx-field-row', fieldSet).forEach (row)->
-                    domGeometry.setMarginBox(row, w: setBox.w, true)
+                    geo.setMarginBox(row, w: setBox.w, true)
                     cols = row.getAttribute('ttx-field-row-cols') || 3
-                    rowBox = domGeometry.getContentBox row
+                    rowBox = geo.getContentBox row
                     singleFieldWidth = parseInt(rowBox.w / cols)
                     query('.ttx-field', row).forEach (field)->
                         span = field.getAttribute('ttx-field-span')
                         fieldWidth = singleFieldWidth * span
-                        domGeometry.setMarginBox(field, w: fieldWidth, true)
+                        geo.setMarginBox(field, w: fieldWidth, true)
                         children = field.childNodes
                         if children.length == 2 and children[0].tagName == 'LABEL'
-                            domGeometry.setMarginBox children[1], w: fieldWidth - domGeometry.getMarginBox(children[0]).w
-
+                            geo.setMarginBox children[1], w: fieldWidth - geo.getMarginBox(children[0]).w
+        layoutPane: (dom)->
+            query('.ttx-field-set', dom).forEach (set)->
+                setBox = geo.getContentBox(set)
+                query('.ttx-field-row', set).forEach (row)->
+                    geo.setMarginBox(row, w: setBox.w, true)
+                    cols = row.getAttribute('ttx-field-row-cols') || 2
+                    rowBox = geo.getContentBox(row)
+                    oneFieldWidth = parseInt(rowBox.w / cols)
+                    query('.ttx-field', row).forEach (field)->
+                        span = field.getAttribute 'ttx-field-span' || 1
+                        fieldWidth = oneFieldWidth * span
+                        geo.setMarginBox(field, w: fieldWidth, true)
+                        children = field.childNodes
+                        if children.length == 2 and children[0].tagName == 'LABEL'
+                            geo.setMarginBox(
+                                children[1],
+                                w: fieldWidth - geo.getMarginBox(children[0], true).w,
+                                false # todo read source code
+                            )
+        mixinCp: (cp)->
+            lang.mixin cp, {
+                actionMap: {}
+                ctrl: new ModelRefController model: getStateful {}
+                fieldMap: {}
+            }
         getCtrlData: (ctrl)->
             data = lang.mixin({}, ctrl.model)
             data.declaredClass = undefined
@@ -359,7 +387,6 @@ define [
         newGridAddRowTooltip: (defs, grid, defaultValues = {})->
             # grid new action tooltip
             tipCp = new Form()
-            tipCp.startup()
             tip = new ConfirmTooltipDialog({
                 defaultValues: defaultValues
                 content: tipCp
@@ -368,6 +395,7 @@ define [
                 reset: ()->
                     @ctrl.model = getStateful @defaultValues
             })
+            tip.form = tipCp
             #            tip.startup()
             @addTtxFieldSet(defs, tip.ctrl, 2, tipCp.domNode, tip.fieldMap)
 
@@ -379,6 +407,8 @@ define [
                     console.log("A new item is saved to server");
 #                    tip.reset()
                 )
+
+            tipCp.startup()
             tip
 
     }

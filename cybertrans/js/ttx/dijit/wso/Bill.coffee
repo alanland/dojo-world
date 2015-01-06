@@ -65,10 +65,10 @@ define [
         headerTableModel: null # 头表模型定义
         detailTableModel: null # 明细表模型定义
 
-        dataCache: {
-            billStore: {}
-            tableStore: {}
-            viewStore: {}
+        cache: {
+            bill: {}
+            table: {}
+            view: {}
         }
 
         constructor: (args)->
@@ -94,15 +94,6 @@ define [
             it = @
             onn window, 'resize', ->
                 geo.setMarginBox(it.domNode, geo.getContentBox(it.workspace.domNode), true)
-            #            @tc.own(aspect.after(
-            #                    @tc,
-            #                    'selectChild',
-            #                    ()->
-            #                        pane = arguments[1][0]
-            #                        it.layoutPane pane.domNode
-            #                )
-            #                true
-            #            )
             aspect.after(@tc, 'selectChild', ()->
                 pane = arguments[1][0]
                 it.layoutPane pane.domNode
@@ -228,26 +219,6 @@ define [
                 if res.indexOf(item.field) < 0
                     res.push item.field
             res.join ','
-
-        layoutPane: (dom)->
-            query('.ttx-field-set', dom).forEach (set)->
-                setBox = geo.getContentBox(set)
-                query('.ttx-field-row', set).forEach (row)->
-                    geo.setMarginBox(row, w: setBox.w, true)
-                    cols = row.getAttribute('ttx-field-row-cols') || 2
-                    rowBox = geo.getContentBox(row)
-                    oneFieldWidth = parseInt(rowBox.w / cols)
-                    query('.ttx-field', row).forEach (field)->
-                        span = field.getAttribute 'ttx-field-span' || 1
-                        fieldWidth = oneFieldWidth * span
-                        geo.setMarginBox(field, w: fieldWidth, true)
-                        children = field.childNodes
-                        if children.length == 2 and children[0].tagName == 'LABEL'
-                            geo.setMarginBox(
-                                children[1],
-                                w: fieldWidth - geo.getMarginBox(children[0], true).w,
-                                false # todo read source code
-                            )
 
         startup: ->
             @inherited arguments

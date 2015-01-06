@@ -70,7 +70,7 @@ define [
 #                    alert(1)
 #                    newWso = new Creation(app: @app)
                 require {async: false}, [tid], (amdType)->
-                    newWso = new amdType(app: it.app, workspace: @wsoContainer)
+                    newWso = new amdType(app: it.app, workspace: it.wsoContainer)
             else if type == 'bill'
                 viewModelDeferred = @app.wsoDefinitionsManager.getBill tid
                 newWso = new Bill(
@@ -79,7 +79,7 @@ define [
                     navigatorItem: item
                     title: item.name
                     app: @app
-                    workspace: @wsoContainer
+                    workspace: it.wsoContainer
                 )
             else if type == 'wso'
                 ''
