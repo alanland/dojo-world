@@ -236,7 +236,7 @@ define [
                 modules: defaultModules
             }, args));
             g.placeAt(container)
-            #            g.startup()
+            g.startup()
             g
 
         addTtxGrid: (def, domNode, args)->
@@ -255,6 +255,10 @@ define [
                     btn = @newTtxAction(adef, {}, grid)
                     listToolbar.actionMap[adef.id] = btn
                     listToolbar.addChild btn
+            if def.dropDownForms
+                for k,v of def.dropDownForms
+                    tip = @newGridAddRowTooltip(v, grid)
+                    grid.barTop[1].actionMap[k].set 'dropDown', tip
             grid
         addTtxServerGrid: (def, domNode, args)->
             return if not def.structure || (def.structure.length == 0 and def.actions.length == 0 )
@@ -327,10 +331,10 @@ define [
                                 w: fieldWidth - geo.getMarginBox(children[0], true).w,
                                 false # todo read source code
                             )
-        mixinCp: (cp)->
+        mixinCp: (cp,defaultValues={})->
             lang.mixin cp, {
                 actionMap: {}
-                ctrl: new ModelRefController model: getStateful {}
+                ctrl: new ModelRefController model: getStateful defaultValues
                 fieldMap: {}
             }
         getCtrlData: (ctrl)->
