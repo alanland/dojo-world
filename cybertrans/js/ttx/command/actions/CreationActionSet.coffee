@@ -22,7 +22,7 @@ define [
         _checkTableModel: ->
             @wso.cpTableModel.form.validate()
 
-        _getTableModelData: ->
+        _getTableModelData: -> # todo remove
             # summary:
             #       获取表模型数据
             gridData = []
@@ -40,12 +40,21 @@ define [
             data
 
         tableModel_Delete: ->
+            wso = @wso
             cp = @wso.cpTableModel
-            key = cp.ctrl.get('key')
+            key = cp.modelSelect.get('value')
             if key
-                @wso.app.dataManager.delete('/rest/creation/tableModels/' + key)
+                @wso.app.dataManager.delete('/rest/creation/tableModels/' + key).then(
+                    (res)->
+                        console.log res
+                        wso.reCache('table')
+                        cp.modelSelect.set 'value', ''
+                    (err)->
+                        console.error err
+                )
             else
                 console.log 'no value to delete'
+
         tableModel_New: ->
             # summary:
             #       新增动作，清空界面数据
@@ -55,17 +64,17 @@ define [
                 cp.ctrl.set(k, '')
             cp.grid.setStore(new Memory(data: []))
 
-
-
         tableModel_Create: ->
             # summary:
             #       保存新增的表模型
+            wso = @wso
             if not @_checkTableModel()
                 return false
             data = @_getTableModelData()
             @wso.app.dataManager.post('/rest/creation/tableModels', data).then(
                 (res)->
                     console.log res
+                    wso.reCache('table')
                 (err)->
                     console.error err
             )
@@ -73,12 +82,14 @@ define [
         tableModel_Update: ->
             # summary:
             #       保存更新表模型
+            wso = @wso
             if not @_checkTableModel()
                 return false
             data = @_getTableModelData()
             @wso.app.dataManager.put('/rest/creation/tableModels', data).then(
                 (res)->
                     console.log res
+                    wso.reCache('table')
                 (err)->
                     console.error err
             )
@@ -90,7 +101,7 @@ define [
         _checkBillModel: ->
             @wso.cpBillModel.form.validate()
 
-        _getBillModelData: ->
+        _getBillModelData: -> # todo remove
             # summary:
             #       获取表模型数据
             gridData = []
@@ -107,9 +118,17 @@ define [
 
         billModel_Delete: ->
             cp = @wso.cpBillModel
+            wso = @wso
             bill = cp.modelSelect.get 'value'
             if bill
-                @wso.app.dataManager.delete('/rest/creation/billModels/' + bill)
+                @wso.app.dataManager.delete('/rest/creation/billModels/' + bill).then(
+                    (res)->
+                        console.log res
+                        wso.reCache('bill')
+                        cp.modelSelect.set 'value', ''
+                    (err)->
+                        console.error err
+                )
             else
                 console.log 'no value to delete'
 
@@ -122,17 +141,17 @@ define [
             for k,v in item
                 cp.ctrl.set k, v
 
-
-
         billModel_Create: ->
             # summary:
             #       保存新增的表模型
+            wso = @wso
             if not @_checkBillModel()
                 return false
             data = @_getBillModelData()
             @wso.app.dataManager.post('/rest/creation/billModels', data).then(
                 (res)->
                     console.log res
+                    wso.reCache('bill')
                 (err)->
                     console.error err
             )
@@ -140,12 +159,14 @@ define [
         billModel_Update: ->
             # summary:
             #       保存更新表模型
+            wso = @wso
             if not @_checkBillModel()
                 return false
             data = @_getBillModelData()
             @wso.app.dataManager.put('/rest/creation/billModels', data).then(
                 (res)->
                     console.log res
+                    wso.reCache('bill')
                 (err)->
                     console.error err
             )
@@ -234,7 +255,7 @@ define [
         navigatorSave: ->
             cp = @wso.cpNavigator
             data = cp.tree.model.store.query()
-            @wso.app.dataManager.put('rest/creation/navigator', {data:data}).then(
+            @wso.app.dataManager.put('rest/creation/navigator', {data: data}).then(
                 (res)->
                     console.log res
                 (err)->

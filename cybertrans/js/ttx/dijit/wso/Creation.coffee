@@ -68,9 +68,9 @@ define [
         cpNavigator: null
 
         cache: {
-            table: {}
-            bill: {}
-            view: {}
+            table: new Memory(data: [], idProperty: 'key')
+            bill: new Memory(data: [], idProperty: 'key')
+            view: new Memory(data: [], idProperty: 'key')
         }
 
         buildRendering: ->
@@ -130,13 +130,14 @@ define [
 #            aspect.after @tc, 'selectChild', lang.hitch(this, this._layoutTc)
 
         _cache: (type, data)->
-            @cache[type] = new Memory(data: data, idProperty: 'key')
-        _reCache: (type)-> # todo 如何返回一个 Deferred，用于该部分代码的重用
+            @cache[type].setData(data)
+        reCache: (type)-> # todo 如何返回一个 Deferred，用于该部分代码的重用
             # todo 是否要改成 同步请求
+            it = @
             if(type)
                 @app.dataManager.get("rest/creation/#{type}Models").then(
                     (data)->
-                        it._cache 'table', data
+                        it._cache type, data
                 )
             else
                 new DeferredList([
@@ -148,6 +149,8 @@ define [
                         it._cache 'table', res[0][1]
                         it._cache 'bill', res[1][1]
                         it._cache 'view', res[2][1]
+                    (err)->
+                        console.error err
                 )
         _buildForm: (def)->
             fx.fadeOut({
@@ -170,11 +173,9 @@ define [
             ms = cp.modelSelect = new FilteringSelect(# model select
                 searchAttr: 'key'
                 store: @cache.table
-#                disabled: true
                 required: false
                 onChange: (value)->
-                    item = @store.get(value)
-                    showModel(item)
+                    showModel(@item)
             )
             domConstruct.place ms.domNode, msDom
             ms.startup()
@@ -183,7 +184,7 @@ define [
             msChanging = false
             # 显示选择表模型的信息
             showModel = (item)->
-                item = item || {key: '', description: '', tableName: '', idColumnName: ''}
+                item = item || it.getEmptyItems(def.fields)
                 msChanging = item
                 for k,v of item
                     cp.ctrl.set k, v
@@ -219,6 +220,7 @@ define [
             tipField = tip.fieldMap['field']
             aspect.after tableNameField, 'onChange', ->
                 tableName = tableNameField.get 'value'
+                return if not tableName
                 it.app.dataManager.get(
                     "rest/creation/tables/#{tableName}/fields",
                     {async: false, cache: true}
@@ -228,7 +230,7 @@ define [
                         cp.fieldMap['idColumnName'].set 'value', msChanging.idColumnName
                         tipField.set 'store', new Memory(data: res)
                         tipField.set 'value', tipField.get('value')
-                        if msChanging # todo to check
+                        if !msChanging==false # todo to check
                             cp.grid.setStore new Memory(data: msChanging.fields.concat())
                             msChanging = false
                         else
@@ -240,9 +242,57 @@ define [
                 tip.ctrl.set 'name', tipField.item.name
                 tip.ctrl.set 'type', tipField.item.type
 
-
-
         __buildBillModel: (def)->
+            it = @
+            cp = @mixinCp(@cpBillModel)
+            msDom = domConstruct.create 'div', {}, cp.domNode # modelSelectDom
+            domConstruct.create 'div', {innerHTML: 'Bill Model', style: 'width:80px;display:inline-block'}, msDom
+            ms = cp.modelSelect = new FilteringSelect(# model select
+                searchAttr: 'key'
+                store: @cache.bill
+                required: false
+                onChange: (value)->
+                    showModel(@item)
+            )
+            domConstruct.place ms.domNode, msDom
+            ms.startup()
+
+            # 该变量用适应列表 tableName 异步获取下拉框之后 idColumnValue 的值没有设置上去的问题
+            msChanging = false
+            # 显示选择表模型的信息
+            showModel = (item)->
+                item = item || it.getEmptyItems(def.fields)
+                msChanging = item
+                for k,v of item
+                    cp.ctrl.set k, v
+            # actions
+            @addTtxActionSet def.actions, cp.domNode, cp.actionMap
+            # field
+            cp.form = new Form()
+            cp.addChild cp.form
+            @addTtxFieldSet(def.fields, cp.ctrl, 2, cp.form.domNode, cp.fieldMap)
+            cp.fieldMap['header'].set 'store', @cache.table
+            cp.fieldMap['detail'].set 'store', @cache.table
+
+            fieldMap = cp.fieldMap
+            # 选择头表之后
+            aspect.after fieldMap['header'], 'onChange', (value)->
+                # 表改变的时候，刷新 idColumnName
+                if value == ''
+                    fieldMap['principal'].set 'value', ''
+                    return
+                cp.fieldMap['principal'].store.setData it.cache.table.get(value).fields
+                cp.fieldMap['principal'].set 'value', msChanging.principal
+            , true
+            aspect.after fieldMap['detail'], 'onChange', (value)->
+                # 表改变的时候，刷新 idColumnName
+                if value == ''
+                    fieldMap['subordinate'].set 'value', ''
+                    return
+                cp.fieldMap['subordinate'].store.setData it.cache.table.get(value).fields
+                cp.fieldMap['subordinate'].set 'value', msChanging.subordinate
+            , true
+
 
         __buildViewModel: (def)->
 

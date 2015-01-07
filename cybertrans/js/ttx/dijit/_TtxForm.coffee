@@ -89,7 +89,6 @@ define [
                 when 'string' then field = new TextBox(
                     name: def.field,
                     value: at(ctrl, def.field)
-                    disabled: def.disabled
                 )
                 when 'filteringSelect'
                     field = new FilteringSelect(lang.mixin({
@@ -111,6 +110,7 @@ define [
             # todo for
             domConstruct.create 'label', {innerHTML: def.name, for: field}, fieldDiv
             fieldMap[def.id] = field
+            field.set 'disabled',!!def.disabled # todo 放到构造里？
             field.startup()
             domConstruct.place field.domNode, fieldDiv
             fieldDiv
@@ -410,5 +410,11 @@ define [
 
             tipCp.startup()
             tip
+
+        getEmptyItems:(fields)->
+            m = []
+            for f in fields
+                m[f.field]=''
+            m
 
     }
