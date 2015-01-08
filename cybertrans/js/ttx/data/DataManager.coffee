@@ -5,10 +5,11 @@ define [
     'dojo/request'
     'dojo/Deferred'
     'dojo/store/Memory'
-], (declare, lang, array, request, Deferred, Memory)->
+    'ttx/dijit/NotifyBox'
+], (declare, lang, array, request, Deferred, Memory, NotifyBox)->
     server = 'http://localhost:9000/'
     dataServer = 'http://localhost:9000/rest/jf/'
-#    dataServer = 'http://localhost:9000/rest/data/'
+    #    dataServer = 'http://localhost:9000/rest/data/'
     declare 'TestData', [],
         constructor: (args)->
             @delay = args.delay || 100
@@ -90,12 +91,23 @@ define [
             deferred
 
         post: (url, data, options = {})->
-            request(server + url, lang.mixin({
+            deferred = request(server + url, lang.mixin({
                 handleAs: 'json'
                 method: 'post'
                 data: JSON.stringify(data)
                 headers: {'Content-Type': 'application/json'}
             }, options))
+            deferred.then(
+                (data)->
+                    new NotifyBox {
+                        msg: "<b>Oops!</b> A wild error appeared!",
+                        type: "error"
+                        position: "center"
+                    }
+                (err)->
+                    alert 'err'
+            )
+            deferred
         put: (url, data, options = {})->
             request(server + url, lang.mixin({
                 handleAs: 'json'
