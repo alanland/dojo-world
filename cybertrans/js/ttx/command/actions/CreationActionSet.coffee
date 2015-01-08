@@ -25,18 +25,13 @@ define [
         _getTableModelData: -> # todo remove
             # summary:
             #       获取表模型数据
-            gridData = []
             cp = @wso.cpTableModel
+            data = @wso.getCtrlData(cp.ctrl)
+            gridData = []
             if cp.grid.rowCount() > 0
                 for i in [0..cp.grid.rowCount() - 1]
                     gridData.push cp.grid.row(i).item()
-            data = {
-                key: cp.ctrl.get('key')
-                tableName: cp.ctrl.get('tableName')
-                description: cp.ctrl.get('description')
-                idColumnName: cp.ctrl.get('idColumnName')
-                fields: gridData
-            }
+            data.fields = gridData
             data
 
         tableModel_Delete: ->
@@ -60,7 +55,7 @@ define [
             #       新增动作，清空界面数据
             cp = @wso.cpTableModel
             cp.modelSelect.set 'value', ''
-            for k in ['key', 'description', 'tableName', 'idColumnName']
+            for k,v of @wso.getCtrlData(cp.ctrl)
                 cp.ctrl.set(k, '')
             cp.grid.setStore(new Memory(data: []))
 
@@ -228,24 +223,29 @@ define [
         viewModel_Create: ->
             # summary:
             #       保存新增的表模型
+            wso=@wso
             if not @_checkViewModel()
                 return false
             data = @_getViewModelData()
             @wso.app.dataManager.post('/rest/creation/viewModels', data).then(
                 (res)->
                     console.log res
+                    wso.reCache('view')
                 (err)->
                     console.error err
             )
         viewModel_Update: ->
             # summary:
             #       保存新增的表模型
+            wso=@wso
             if not @_checkViewModel()
                 return false
             data = @_getViewModelData()
             @wso.app.dataManager.put('/rest/creation/viewModels', data).then(
                 (res)->
                     console.log res
+                    wso.reCache('view')
+                    wso.app.rebuildCache('view')
                 (err)->
                     console.error err
             )

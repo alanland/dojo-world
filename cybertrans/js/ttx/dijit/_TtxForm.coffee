@@ -39,7 +39,6 @@ define [
     at, getStateful, ModelRefController,
     Grid, Cache, AsyncCache, modules,
     util)->
-    defaultDropDown = new TooltipDialog({content: "未实现的下拉操作"})
     declare null, {
         actionSets: {default: {}, global: {}}
 
@@ -110,7 +109,7 @@ define [
             # todo for
             domConstruct.create 'label', {innerHTML: def.name, for: field}, fieldDiv
             fieldMap[def.id] = field
-            field.set 'disabled',!!def.disabled # todo 放到构造里？
+            field.set 'disabled', !!def.disabled # todo 放到构造里？
             field.startup()
             domConstruct.place field.domNode, fieldDiv
             fieldDiv
@@ -331,60 +330,61 @@ define [
                                 w: fieldWidth - geo.getMarginBox(children[0], true).w,
                                 false # todo read source code
                             )
-        mixinCp: (cp,defaultValues={})->
+        mixinCp: (cp, defaultValues = {})->
             lang.mixin cp, {
                 actionMap: {}
                 ctrl: new ModelRefController model: getStateful defaultValues
                 fieldMap: {}
             }
         getCtrlData: (ctrl)->
-            data = lang.mixin({}, ctrl.model)
-            data.declaredClass = undefined
-            data._attrPairNames = undefined
+            data = {}
+            for k,v of ctrl.model
+                if ['declaredClass', '_attrPairNames'].indexOf(k) == -1 and !lang.isFunction(v)
+                    data[k] = v
             data
 
-        newGridAddRowButton: (grid, widgetArgs)->
-            defs = [
-                {"id": "id", "type": "string", "field": "id", "name": "Id"},
-                {"id": "field", "type": "filteringSelect", "field": "field", "name": "Field"},
-                {"id": "name", "type": "string", "field": "name", "name": "name"}
-            ]
-            #            tip = @newGridAddRowTooltip fdefs, grid
-            #            btn = new DropDownButton widgetArgs
-            #            btn.set 'dropDown', tip
-            ##            btn.startup()
-            #            btn
-
-
-            defaultValues = {}
-
-            # grid new action tooltip
-            tipCp = new Form()
-            tipCp.startup()
-            tip = new ConfirmTooltipDialog({
-                defaultValues: defaultValues
-                content: tipCp
-                fieldMap: {}
-                ctrl: new ModelRefController model: getStateful defaultValues
-                reset: ()->
-                    @ctrl.model = getStateful @defaultValues
-            })
-            #            tip.startup()
-            @addTtxFieldSet(defs, tip.ctrl, 2, tipCp.domNode, tip.fieldMap)
-
-            that = this
-            # 新增确定事件
-            tip.onExecute = ->
-                data = that.getCtrlData(tip.ctrl)
-                Deferred.when(grid.store.add(data), ->
-                    console.log("A new item is saved to server");
-#                    tip.reset()
-                )
-            tip
-
-            btn = new DropDownButton widgetArgs
-            btn.set 'dropDown', tip
-            btn
+#        newGridAddRowButton: (grid, widgetArgs)->
+#            defs = [
+#                {"id": "id", "type": "string", "field": "id", "name": "Id"},
+#                {"id": "field", "type": "filteringSelect", "field": "field", "name": "Field"},
+#                {"id": "name", "type": "string", "field": "name", "name": "name"}
+#            ]
+#            #            tip = @newGridAddRowTooltip fdefs, grid
+#            #            btn = new DropDownButton widgetArgs
+#            #            btn.set 'dropDown', tip
+#            ##            btn.startup()
+#            #            btn
+#
+#
+#            defaultValues = {}
+#
+#            # grid new action tooltip
+#            tipCp = new Form()
+#            tipCp.startup()
+#            tip = new ConfirmTooltipDialog({
+#                defaultValues: defaultValues
+#                content: tipCp
+#                fieldMap: {}
+#                ctrl: new ModelRefController model: getStateful defaultValues
+#                reset: ()->
+#                    @ctrl.model = getStateful @defaultValues
+#            })
+#            #            tip.startup()
+#            @addTtxFieldSet(defs, tip.ctrl, 2, tipCp.domNode, tip.fieldMap)
+#
+#            that = this
+#            # 新增确定事件
+#            tip.onExecute = ->
+#                data = that.getCtrlData(tip.ctrl)
+#                Deferred.when(grid.store.add(data), ->
+#                    console.log("A new item is saved to server");
+##                    tip.reset()
+#                )
+#            tip
+#
+#            btn = new DropDownButton widgetArgs
+#            btn.set 'dropDown', tip
+#            btn
 
 
 
@@ -415,10 +415,16 @@ define [
             tipCp.startup()
             tip
 
-        getEmptyItems:(fields)->
+        getEmptyItems: (fields)->
+            # fields 是一个对象数组，返回一个map,对象的值为空,k是数组对象的field字段
             m = []
             for f in fields
-                m[f.field]=''
+                m[f.field] = ''
             m
+
+        setCtrlDataFromMap: (item, ctrl, fields)->
+            # 把一个对象中的数据设置到ctrl中，要指定需要设置的数据列
+            for k in fields
+                ctrl.set k, item[k]
 
     }

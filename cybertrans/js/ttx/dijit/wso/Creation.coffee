@@ -88,7 +88,6 @@ define [
             node.innerHTML = "Loading...";
             domConstruct.place(node, @domNode, "last")
 
-
         postCreate: ->
             @inherited arguments
             it = @
@@ -162,7 +161,7 @@ define [
             @__buildNavigator(def.navigator)
         __buildTableModel: (def)->
             it = @
-            cp = @mixinCp(@cpTableModel)
+            cp = @mixinCp @cpTableModel #, {autoNoExpression: "{yyyyMMdd}{0000000}"}
             msDom = domConstruct.create 'div', {}, cp.domNode # modelSelectDom
             domConstruct.create 'div', {innerHTML: 'Table Model', style: 'width:80px;display:inline-block'}, msDom
             ms = cp.modelSelect = new FilteringSelect(# model select
@@ -292,12 +291,14 @@ define [
             it = @
             cp = @mixinCp(@cpViewModel)
             msDom = domConstruct.create 'div', {}, cp.domNode # modelSelectDom
+            msChanging = false
             domConstruct.create 'div', {innerHTML: 'View Model', style: 'width:80px;display:inline-block'}, msDom
             ms = cp.modelSelect = new FilteringSelect(# model select
                 searchAttr: 'key'
                 store: @cache.view
                 required: false
                 onChange: (value)->
+                    msChanging = true
                     showModel(@item)
             )
             domConstruct.place ms.domNode, msDom
@@ -320,9 +321,15 @@ define [
             cp.fieldMap['billKey'].set 'store', @cache.bill
             aspect.after cp.fieldMap['billKey'], 'onChange', lang.hitch(@, (value)->
                 @__rebuildViewModelTabContainer(cp, def)
-                @__buildViewModelTabContainerData()
+                if  msChanging
+                    @__buildViewModelTcDataByView()
+                else
+                    @__buildViewModelTcDataByBill()
+                msChanging = false
             ), true
         __rebuildViewModelTabContainer: (cp, def)-> # viewModelDef
+            it = @
+            cp.tc.destroyRecursive() if cp.tc
             tc = cp.tc = new TabContainer(nested: true)
             cp.addChild tc
             cpList = cp.cpList = new ContentPane(title: 'List')
@@ -335,13 +342,16 @@ define [
             billData = @cache.bill.get(cp.ctrl.get 'billKey' || '')
             headerData = @cache.table.get billData?.header
             detailData = @cache.table.get billData?.detail
-            @__buildViewTcList(def.list, billData, headerData, detailData)
-            @__buildViewTcBill(def.bill, billData, headerData, detailData)
-            @__buildViewTcDetail(def.detail, billData, headerData, detailData)
+            headerFieldStore = new Memory(data: headerData.fields, idProperty: 'field')
+            detailFieldStore = new Memory(data: detailData.fields, idProperty: 'field')
+            @__buildViewTcList(def.list, billData, headerData, detailData, headerFieldStore, detailFieldStore)
+            @__buildViewTcBill(def.bill, billData, headerData, detailData, headerFieldStore, detailFieldStore)
+            @__buildViewTcDetail(def.detail, billData, headerData, detailData, headerFieldStore, detailFieldStore)
             tc.startup()
 
 
-        __buildViewTcList: (def, billData, headerData, detailData)->
+        __buildViewTcList: (def, billData, headerData, detailData, headerFieldStore, detailFieldStore)->
+            it = @
             cp = @mixinCp(@cpViewModel.cpList, {columns: 2})
             @addTtxFieldSet def.viewFields, cp.ctrl, 2, cp.domNode, cp.fieldMap
             # 查询字段
@@ -365,51 +375,74 @@ define [
             return if not billData
 
             # 查询字段 新增 tip
+
             fieldTip = cp.fieldsGrid.barTop[1].actionMap['new'].dropDown
             data = [{key: headerData.key, item: headerData, value: headerData}]
             data.push {key: detailData.key, value: detailData} if detailData
             tipTable = fieldTip.fieldMap['table'] # tip 中的 Table 字段
             tipTable.set 'store', new Memory(data: data, idProperty: 'key')
             tipField = fieldTip.fieldMap['field']
+
             aspect.after tipTable, 'onChange', ->
                 tipField.set 'store', new Memory(data: tipTable.item.value.fields.concat())
+            aspect.after tipField, 'onChange', (value)->
+                store = (if tipTable.get('value') == billData.header then headerFieldStore else detailFieldStore)
+                item = store.get(value)
+                it.setCtrlDataFromMap(item, fieldTip.ctrl, ['id', 'name', 'type'])
+                fieldTip.ctrl.set 'operator', (if item.type == 'string' then 'like' else '=')
+            , true
 
             # 表格 structure 的新增tip
             structureTip = gridCp.structureGrid.barTop[1].actionMap['new'].dropDown
             structureTip.fieldMap['field'].set 'store', new Memory(data: headerData.fields)
+            aspect.after structureTip.fieldMap['field'], 'onChange', (value)->
+                it.setCtrlDataFromMap(headerFieldStore.get(value), structureTip.ctrl, ['id', 'name'])
+            , true
 
-        __buildViewTcBill: (def, billData, headerData, detailData)->
+
+
+        __buildViewTcBill: (def, billData, headerData, detailData, headerFieldStore, detailFieldStore)->
+            it = @
             cp = @mixinCp(@cpViewModel.cpBill, {columns: 2})
             @addTtxFieldSet def.viewFields, cp.ctrl, 2, cp.domNode, cp.fieldMap
             cp.actionsGrid = @addTtxGrid def.actions, @addTitlePane('单据操作配置', cp.domNode).containerNode, {
                 modules: [modules.CellWidget, modules.Edit]
             }
-            # 查询字段
+            # 字段
             cp.fieldsGrid = @addTtxGrid def.fields, @addTitlePane('单据字段配置', cp.domNode).containerNode, {
                 modules: [modules.CellWidget, modules.Edit]
             }
-            # grid
-            gridCp = cp.gridPane = @addTitlePane('明细列表配置', cp.domNode)
-            gridCp.ctrl = new ModelRefController model: getStateful {columns: 2}
-            @addTtxFieldSet def.grid.fields, gridCp.ctrl, 2, gridCp.containerNode, {}
-            gridCp.actionsGrid = @addTtxGrid def.grid.actions, gridCp.containerNode, {
-                modules: [modules.CellWidget, modules.Edit]
-            }
-            gridCp.structureGrid = @addTtxGrid def.grid.structure, gridCp.containerNode, {
-                modules: [modules.CellWidget, modules.Edit]
-            }
+            if detailData
+                # grid
+                gridCp = cp.gridPane = @addTitlePane('明细列表配置', cp.domNode)
+                gridCp.ctrl = new ModelRefController model: getStateful {columns: 2}
+                @addTtxFieldSet def.grid.fields, gridCp.ctrl, 2, gridCp.containerNode, {}
+                gridCp.actionsGrid = @addTtxGrid def.grid.actions, gridCp.containerNode, {
+                    modules: [modules.CellWidget, modules.Edit]
+                }
+                gridCp.structureGrid = @addTtxGrid def.grid.structure, gridCp.containerNode, {
+                    modules: [modules.CellWidget, modules.Edit]
+                }
 
             return if not billData
 
             # 字段 新增 tip
             fieldTip = cp.fieldsGrid.barTop[1].actionMap['new'].dropDown
-            fieldTip.fieldMap['field'].set 'store', new Memory(data: headerData.fields)
+            tipField = fieldTip.fieldMap['field']
+            tipField.set 'store', new Memory(data: headerData.fields)
+            aspect.after tipField, 'onChange', (value)->
+                it.setCtrlDataFromMap(headerFieldStore.get(value), fieldTip.ctrl, ['id', 'name', 'type'])
+            , true
 
-            # 表格 structure 的新增tip
-            structureTip = gridCp.structureGrid.barTop[1].actionMap['new'].dropDown
-            structureTip.fieldMap['field'].set 'store', new Memory(data: detailData.fields)
+            if detailData
+                # 表格 structure 的新增tip
+                structureTip = gridCp.structureGrid.barTop[1].actionMap['new'].dropDown
+                structureTip.fieldMap['field'].set 'store', new Memory(data: detailData.fields)
+                aspect.after structureTip.fieldMap['field'], 'onChange', (value)->
+                    it.setCtrlDataFromMap(detailFieldStore.get(value), structureTip.ctrl, ['id', 'name'])
+                , true
 
-        __buildViewTcDetail: (def, billData, headerData, detailData)->
+        __buildViewTcDetail: (def, billData, headerData, detailData, headerFieldStore, detailFieldStore)->
             cp = @mixinCp(@cpViewModel.cpDetail, {columns: 2})
             @addTtxFieldSet def.viewFields, cp.ctrl, 2, cp.domNode, cp.fieldMap
             cp.actionsGrid = @addTtxGrid def.actions, @addTitlePane('明细操作配置', cp.domNode).containerNode, {
@@ -422,13 +455,15 @@ define [
 
             return if not billData
 
-            # 字段 新增 tip
-            fieldTip = cp.fieldsGrid.barTop[1].actionMap['new'].dropDown
-            fieldTip.fieldMap['field'].set 'store', new Memory(data: detailData.fields)
+            if detailData
+                # 字段 新增 tip
+                fieldTip = cp.fieldsGrid.barTop[1].actionMap['new'].dropDown
+                fieldTip.fieldMap['field'].set 'store', new Memory(data: detailData.fields)
 
-        __buildViewModelTabContainerData: ->
+        __buildViewModelTcDataByView: ->
             cp = @cpViewModel
             data = @cache.view.get(cp.modelSelect.get('value'))
+            return if not data
             #
             # list
             list = data.list
@@ -436,6 +471,7 @@ define [
             cpList.ctrl.set 'columns', list.columns
             cpList.actionsGrid.setStore(new Memory(data: list.actions))
             cpList.fieldsGrid.setStore(new Memory data: list.fields)
+            cpList.fieldsGrid.startup()
             cpList.gridPane.ctrl.set 'name', list.grid.name
             cpList.gridPane.actionsGrid.setStore(new Memory data: list.grid.actions)
             cpList.gridPane.structureGrid.setStore(new Memory data: list.grid.structure)
@@ -456,6 +492,23 @@ define [
             cpBill.ctrl.set 'columns', detail.columns
             cpDetail.actionsGrid.setStore(new Memory data: detail.actions)
             cpDetail.fieldsGrid.setStore(new Memory data: detail.fields)
+
+        __buildViewModelTcDataByBill: ->
+            cp = @cpViewModel
+            data = @cache.bill.get(cp.ctrl.get 'billKey')
+            return if not data
+            header = @cache.table.get data.detail
+            detail = @cache.table.get data.detail
+            headerFieldStore = new Memory(data: header.fields, idProperty: 'id')
+            detailFieldStore = new Memory(data: detail.fields, idProperty: 'id')
+            # todo 这里暂时选不自动带出所有字段
+            tip = cp.cpBill.gridPane.structureGrid.barTop[1].actionMap['new'].dropDown
+            aspect.after tip.fieldMap['field'], 'onChange', (value)->
+                headerFieldStore
+                tip.fieldMap['id'].set 'value'
+
+            , true
+
 
         __buildNavigator: (def)->
             it = this

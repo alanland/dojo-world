@@ -71,32 +71,22 @@ define [
 
             window.app = this
             # build cache
-            @buildInitCache()
+            @buildCache()
 
-        buildInitCache: ->
+        buildCache: ->
+            @rebuildCache('table')
+            @rebuildCache('bill')
+            @rebuildCache('view')
+
+        rebuildCache: (type)->
             dataManager = @dataManager
-            dataManager.get('/rest/creation/tableModels', {cache: true}).then(
+            dataManager.get("rest/creation/#{type}Models", {updateCache: true}).then(
                 (res)->
                     for r in res
-                        dataManager.cacheObject("rest/creation/tableModels/#{r.key}", r)
+                        dataManager.cacheObject("rest/creation/#{type}Models/#{r.key}", r)
                 (err)->
                     console.error err
             )
-            dataManager.get('/rest/creation/billModels', {cache: true}).then(
-                (res)->
-                    for r in res
-                        dataManager.cacheObject("rest/creation/billModels/#{r.key}", r)
-                (err)->
-                    console.error err
-            )
-            dataManager.get('/rest/creation/viewModels', {cache: true}).then(
-                (res)->
-                    for r in res
-                        dataManager.cacheObject("rest/creation/viewModels/#{r.key}", r)
-                (err)->
-                    console.error err
-            )
-            console.log 'app cache initialized'
 
     }
     app
