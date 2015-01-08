@@ -443,6 +443,7 @@ define [
                 , true
 
         __buildViewTcDetail: (def, billData, headerData, detailData, headerFieldStore, detailFieldStore)->
+            it = @
             cp = @mixinCp(@cpViewModel.cpDetail, {columns: 2})
             @addTtxFieldSet def.viewFields, cp.ctrl, 2, cp.domNode, cp.fieldMap
             cp.actionsGrid = @addTtxGrid def.actions, @addTitlePane('明细操作配置', cp.domNode).containerNode, {
@@ -459,6 +460,9 @@ define [
                 # 字段 新增 tip
                 fieldTip = cp.fieldsGrid.barTop[1].actionMap['new'].dropDown
                 fieldTip.fieldMap['field'].set 'store', new Memory(data: detailData.fields)
+                aspect.after fieldTip.fieldMap['field'], 'onChange', (value)->
+                    it.setCtrlDataFromMap(detailFieldStore.get(value), fieldTip.ctrl, ['id', 'name','type'])
+                , true
 
         __buildViewModelTcDataByView: ->
             cp = @cpViewModel
