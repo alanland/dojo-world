@@ -14,8 +14,8 @@ define [
     declare [_WidgetBase], {
         to: null
 
-        width: 400
-        height: 60
+        width: 300
+        height: 40
         position: 'right'
         autohide: true
         msg: ''
@@ -23,8 +23,10 @@ define [
         type: 'default'
 #        @domNode.id: "notifyBox"
         types: {
-            error: 'error',
+            0: 'success'
             success: 'success',
+            1: 'error'
+            error: 'error',
             info: 'info',
             warning: 'warning',
             default: 'default'
@@ -39,6 +41,7 @@ define [
             if(@height)
                 if(@height >= 100 && @height <= 0)
                     @height = undefined;
+            @type = @types[@type]
             if(array.indexOf(['error', 'success', 'info', 'warning', 'default'], @type) < 0)
                 @type = 'default'
 

@@ -100,9 +100,9 @@ define [
             deferred.then(
                 (data)->
                     new NotifyBox {
-                        msg: "<b>Oops!</b> A wild error appeared!",
-                        type: "error"
-                        position: "center"
+                        msg: "<b>#{data.desc || 'Success'}</b>",
+                        type: data.code
+#                        position: "center"
                     }
                 (err)->
                     alert 'err'
