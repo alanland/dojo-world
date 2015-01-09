@@ -105,23 +105,57 @@ define [
 #                        position: "center"
                     }
                 (err)->
-                    alert 'err'
+                    new NotifyBox {
+                        msg: "<b>Error !</b>",
+                        type: 'error'
+                        position: "center"
+                    }
             )
             deferred
         put: (url, data, options = {})->
-            request(server + url, lang.mixin({
+            deferred = request(server + url, lang.mixin({
                 handleAs: 'json'
                 method: 'put'
                 data: JSON.stringify(data)
                 headers: {'Content-Type': 'application/json'}
             }, options))
+            deferred.then(
+                (data)->
+                    new NotifyBox {
+                        msg: "<b>#{data.desc || 'Success'}</b>",
+                        type: data.code
+#                        position: "center"
+                    }
+                (err)->
+                    new NotifyBox {
+                        msg: "<b>Error !</b>",
+                        type: 'error'
+                        position: "center"
+                    }
+            )
+            deferred
         delete: (url, data, options = {})->
-            request(server + url, lang.mixin({
+            deferred = request(server + url, lang.mixin({
                 handleAs: 'json'
                 method: 'delete'
                 data: JSON.stringify(data)
                 headers: {'Content-Type': 'application/json'}
             }, options))
+            deferred.then(
+                (data)->
+                    new NotifyBox {
+                        msg: "<b>#{data.desc || 'Success'}</b>",
+                        type: data.code
+#                        position: "center"
+                    }
+                (err)->
+                    new NotifyBox {
+                        msg: "<b>Error !</b>",
+                        type: 'error'
+                        position: "center"
+                    }
+            )
+            deferred
 
 
         getViewModel: (key)-> # 获取单据界面定义

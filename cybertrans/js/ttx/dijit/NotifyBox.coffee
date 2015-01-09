@@ -12,7 +12,70 @@ define [
     'dijit/_WidgetBase'
 ], (declare, lang, array, bfx, domClass, domStyle, geo, domConstruct, fx, onn, _WidgetBase)->
     declare [_WidgetBase], {
-        to: null
+
+    # usage
+#    new Notify({
+#      msg: "<b>Success:</b> In 5 seconds i'll be gone",
+#      type: "success"
+#    });
+#    new Notify({
+#      msg: "<b>Oops!</b> A wild error appeared!",
+#      type: "error",
+#      position: "center"
+#    });
+#    new Notify({
+#      type: "warning",
+#      msg: "<b>Warning:</b> Be patient my friend.",
+#      position: "left"
+#    });
+#    new Notify({
+#      type: "info",
+#      msg: "<b>Info:</b> Some info here.",
+#      width: "all",
+#      height: 100,
+#      position: "center"
+#    });
+#    new Notify({
+#      type: "error",
+#      msg: "This error will stay here until you click it.",
+#      position: "center",
+#      width: 500,
+#      height: 60,
+#      autohide: false
+#    });
+#    new Notify({
+#      type: "warning",
+#      msg: "Opacity is cool!",
+#      position: "center",
+#      opacity: 0.8
+#    });
+#    new Notify({
+#      type: "info",
+#      msg: "Testing a multiline text. Testing, one, two.. yep.",
+#      position: "center",
+#      width: 100,
+#      autohide: false,
+#      multiline: true
+#    });
+#    new Notify({
+#      type: "success",
+#      msg: "Fade mode activated.",
+#      position: "right",
+#      fade: true
+#    });
+#    new Notify({
+#      msg: "Customize with your favourite color!",
+#      position: "left",
+#      bgcolor: "#294447",
+#      color: "#F19C65"
+#    });
+#    new Notify({
+#      msg: "Customize the timeout!",
+#      position: "left",
+#      time: 1000
+#    });
+
+        to: null # internal 引用
 
         width: 300
         height: 40
@@ -21,7 +84,6 @@ define [
         msg: ''
         opacity: 1
         type: 'default'
-#        @domNode.id: "notifyBox"
         types: {
             0: 'success'
             success: 'success',
