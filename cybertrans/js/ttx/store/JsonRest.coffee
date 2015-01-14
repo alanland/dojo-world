@@ -11,6 +11,8 @@ define [
             res = new Deferred()
             res.resolve([])
             return res if @muteQuery
+            # todo 不使用全局变量
+            @headers = app.dataManager.mixinHeaders(@headers)
             @inherited arguments
 
     }

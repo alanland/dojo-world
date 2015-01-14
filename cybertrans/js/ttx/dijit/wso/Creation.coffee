@@ -71,6 +71,7 @@ define [
             table: new Memory(data: [], idProperty: 'key')
             bill: new Memory(data: [], idProperty: 'key')
             view: new Memory(data: [], idProperty: 'key')
+            viewTemplate: {}
         }
 
         buildRendering: ->
@@ -113,11 +114,13 @@ define [
                 @app.dataManager.get('/rest/creation/billModels')
                 @app.dataManager.get('/rest/creation/viewModels')
                 @app.dataManager.getBillDefinition('Creation')
+                @app.dataManager.getBillDefinition('BillTemplate')
             ]).then(
                 (res)->
                     it._cache 'table', res[0][1]
                     it._cache 'bill', res[1][1]
                     it._cache 'view', res[2][1]
+                    it.cache.viewTemplate = res[4][1]
                     it._buildForm(res[3][1])
                 (err)->
                     ''
@@ -321,10 +324,20 @@ define [
             cp.fieldMap['billKey'].set 'store', @cache.bill
             aspect.after cp.fieldMap['billKey'], 'onChange', lang.hitch(@, (value)->
                 @__rebuildViewModelTabContainer(cp, def)
-                if  msChanging
-                    @__buildViewModelTcDataByView()
-                else
-                    @__buildViewModelTcDataByBill()
+                data = @cache.view.get(cp.modelSelect.get('value'))
+                if  !msChanging
+                    data = it.cache.viewTemplate
+                    billData = @cache.bill.get(cp.ctrl.get 'billKey')
+                    header = @cache.table.get billData.header
+                    detail = @cache.table.get billData.detail
+                    headerFieldStore = new Memory(data: header.fields, idProperty: 'id')
+                    detailFieldStore = new Memory(data: detail.fields, idProperty: 'id') if detail
+                    data.list.grid.structure = header.fields.concat()
+                    data.bill.fields = header.fields.concat()
+                    data.bill.grid.structure=detail.fields.concat() if detail
+                    data.detail.fields = detail.fields.concat() if detail
+#                    @__buildViewModelTcDataByBill()
+                @__buildViewModelTcDataByView(data)
                 msChanging = false
             ), true
         __rebuildViewModelTabContainer: (cp, def)-> # viewModelDef
@@ -343,7 +356,7 @@ define [
             headerData = @cache.table.get billData?.header
             detailData = @cache.table.get billData?.detail
             headerFieldStore = new Memory(data: headerData.fields, idProperty: 'field')
-            detailFieldStore = new Memory(data: detailData.fields, idProperty: 'field')
+            detailFieldStore = new Memory(data: detailData.fields, idProperty: 'field') if detailFieldStore
             @__buildViewTcList(def.list, billData, headerData, detailData, headerFieldStore, detailFieldStore)
             @__buildViewTcBill(def.bill, billData, headerData, detailData, headerFieldStore, detailFieldStore)
             @__buildViewTcDetail(def.detail, billData, headerData, detailData, headerFieldStore, detailFieldStore)
@@ -398,8 +411,6 @@ define [
             aspect.after structureTip.fieldMap['field'], 'onChange', (value)->
                 it.setCtrlDataFromMap(headerFieldStore.get(value), structureTip.ctrl, ['id', 'name'])
             , true
-
-
 
         __buildViewTcBill: (def, billData, headerData, detailData, headerFieldStore, detailFieldStore)->
             it = @
@@ -461,12 +472,11 @@ define [
                 fieldTip = cp.fieldsGrid.barTop[1].actionMap['new'].dropDown
                 fieldTip.fieldMap['field'].set 'store', new Memory(data: detailData.fields)
                 aspect.after fieldTip.fieldMap['field'], 'onChange', (value)->
-                    it.setCtrlDataFromMap(detailFieldStore.get(value), fieldTip.ctrl, ['id', 'name','type'])
+                    it.setCtrlDataFromMap(detailFieldStore.get(value), fieldTip.ctrl, ['id', 'name', 'type'])
                 , true
 
-        __buildViewModelTcDataByView: ->
+        __buildViewModelTcDataByView: (data) ->
             cp = @cpViewModel
-            data = @cache.view.get(cp.modelSelect.get('value'))
             return if not data
             #
             # list
@@ -486,33 +496,31 @@ define [
             cpBill.ctrl.set 'columns', bill.columns
             cpBill.actionsGrid.setStore(new Memory data: bill.actions)
             cpBill.fieldsGrid.setStore(new Memory data: bill.fields)
-            cpBill.gridPane.ctrl.set 'name', bill.grid.name
-            cpBill.gridPane.actionsGrid.setStore(new Memory data: bill.grid.actions)
-            cpBill.gridPane.structureGrid.setStore(new Memory data: bill.grid.structure)
-            #
-            # detail
-            detail = data.detail
-            cpDetail = cp.cpDetail
-            cpBill.ctrl.set 'columns', detail.columns
-            cpDetail.actionsGrid.setStore(new Memory data: detail.actions)
-            cpDetail.fieldsGrid.setStore(new Memory data: detail.fields)
+            if bill.detail
+                cpBill.gridPane.ctrl.set 'name', bill.grid.name
+                cpBill.gridPane.actionsGrid.setStore(new Memory data: bill.grid.actions)
+                cpBill.gridPane.structureGrid.setStore(new Memory data: bill.grid.structure)
+                #
+                # detail
+                detail = data.detail
+                cpDetail = cp.cpDetail
+                cpBill.ctrl.set 'columns', detail.columns
+                cpDetail.actionsGrid.setStore(new Memory data: detail.actions)
+                cpDetail.fieldsGrid.setStore(new Memory data: detail.fields)
 
         __buildViewModelTcDataByBill: ->
             cp = @cpViewModel
             data = @cache.bill.get(cp.ctrl.get 'billKey')
             return if not data
-            header = @cache.table.get data.detail
+            header = @cache.table.get data.header
             detail = @cache.table.get data.detail
             headerFieldStore = new Memory(data: header.fields, idProperty: 'id')
-            detailFieldStore = new Memory(data: detail.fields, idProperty: 'id')
             # todo 这里暂时选不自动带出所有字段
             tip = cp.cpBill.gridPane.structureGrid.barTop[1].actionMap['new'].dropDown
             aspect.after tip.fieldMap['field'], 'onChange', (value)->
                 headerFieldStore
                 tip.fieldMap['id'].set 'value'
-
             , true
-
 
         __buildNavigator: (def)->
             it = this

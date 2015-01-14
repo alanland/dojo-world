@@ -103,13 +103,12 @@ define [
                 dm = it.app.dataManager
                 dm.getBillModel(vm.billKey).then((bm)->
                     it.billModel = bm
-                    new DeferredList([
-                        dm.getTableModel(bm.header),
-                        dm.getTableModel(bm.detail)
-                    ]).then(
+                    dl = [dm.getTableModel(bm.header)]
+                    dl.push(dl.push() if bm.details) if bm.details
+                    new DeferredList(dl).then(
                         (res)->
                             it.headerTableModel = res[0][1]
-                            it.detailTableModel = res[1][1]
+                            it.detailTableModel = res[1][1] if bm.details
 
                             # action sets 加载
                             it.actionSets.global = new BillActionSet wso: it
@@ -215,7 +214,6 @@ define [
             # 获取表格要向服务端请求的字段
             res = [tableModel.idColumnName]
             for item in gridDf.structure
-                console.log item
                 if res.indexOf(item.field) < 0
                     res.push item.field
             res.join ','

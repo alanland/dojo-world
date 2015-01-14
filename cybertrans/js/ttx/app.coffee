@@ -2,6 +2,8 @@ define [
     'dojo/_base/lang'
     'dojo/dom-construct'
     'ttx/store/JsonRest'
+    'dijit/ConfirmDialog'
+    'dijit/form/TextBox'
     'dijit/layout/BorderContainer'
     'dijit/layout/ContentPane'
     'ttx/WorkspaceManager'
@@ -11,14 +13,26 @@ define [
     'ttx/data/WsoDefinitionsManager'
     'ttx/dijit/MenuBand'
     'ttx/dijit/StatusBar'
+    'ttx/dijit/NotifyBox'
     "dojo/domReady!"
-], (lang, domConstruct, JsonRest, BorderContainer, ContentPane,
+], (lang, domConstruct, JsonRest, ConfirmDialog, TextBox, BorderContainer, ContentPane,
     WorkspaceManager,
     Navigator, ItemManager, DataManager, WsoDefinitionsManager,
-    MenuBand, StatusBar)->
+    MenuBand, StatusBar, NotifyBox)->
     # Create test store, adding the getChildren() method required by ObjectStoreModel
     app = {
         server: 'http://localhost:9000/'
+        user: {
+        # todo 登录机制，存储令牌而不是明文
+            username: 'admin1'
+            token: 'pass'
+        }
+        loginDialog: new ConfirmDialog {
+            title: 'Login'
+            draggable: false
+            closable: false
+            style: "width:400px"
+        }
         dataManager: null
         wsoDefinitionsManager: null
         workspaceManager: null
@@ -27,6 +41,7 @@ define [
         statusBar: null
         appContainer: null
         startup: (args)->
+            @buildLogin()
             @dataManager = new DataManager(app: @)
             @wsoDefinitionsManager = new WsoDefinitionsManager(app: @)
             @workspaceManager = new WorkspaceManager(app: @)
@@ -69,7 +84,7 @@ define [
             window.onresize = ->
                 appContainer.startup()
 
-            window.app = this
+#            window.app = this
             # build cache
             @buildCache()
 
@@ -87,6 +102,36 @@ define [
                 (err)->
                     console.error err
             )
-
+        buildLogin: ->
+            it = @
+            username = new TextBox()
+            password = new TextBox()
+            dialog = @loginDialog
+            dialog.addChild(username)
+            dialog.addChild(password)
+            dialog.onExecute = ->
+                it.dataManager.post('/rest/auth/login', {
+                    username: username.get 'value'
+                    password: password.get 'value'
+                }).then(
+                    (res)->
+                        if(res.code == '0' or res.code == 0)
+                            it.user = res.user
+                            it.navigator.reload()
+                            it.loginDialog.hide()
+                        else
+                            new NotifyBox {
+                                msg: "<b>登录失败 !</b>",
+                                type: 'error'
+                                position: "center"
+                            }
+                    (res)->
+                        new NotifyBox {
+                            msg: "<b>Network Error !</b>",
+                            type: 'error'
+                            position: "center"
+                        }
+                )
     }
+    window.app = app
     app

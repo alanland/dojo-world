@@ -10,7 +10,8 @@ define [
     server = 'http://localhost:9000/'
     dataServer = 'http://localhost:9000/rest/jf/'
     #    dataServer = 'http://localhost:9000/rest/data/'
-    declare 'TestData', [],
+    declare 'TestData', []
+    ,
         constructor: (args)->
             @delay = args.delay || 100
         handler: (deferred, args)->
@@ -41,7 +42,11 @@ define [
 #                @service = new TestData({}) # todo
             @app = args.app
             @cache = new Memory(data: [], idProperty: cacheIdProp)
-
+        mixinHeaders: (headers)->
+            lang.mixin headers, {
+                'X-User': @app.user.username
+                'X-Token': @app.user.token
+            }
         cacheObject: (key, value)->
             value[cacheIdProp] = key
             @cache.put(value)
@@ -53,7 +58,11 @@ define [
 #            @cache = new Memory(data: [], idProperty: cacheIdProp)
 
         getJson: (type)->
-            request(dataServer + type, {handleAs: 'json'})
+            deferred = request(dataServer + type, {handleAs: 'json'})
+#            deferred.then(
+#                (res)->
+#
+#            )
 
         getWsoDefinition: (tid)-> ## todo @Deprecated
             console.error 'deprecated'
@@ -64,6 +73,7 @@ define [
                 cache: false
                 updateCache: false # default cache=true
             }, options
+            options.headers = @mixinHeaders(options.headers)
             if options.updateCache # 如果更新缓存，默认使用缓存
                 options.cache = true
 

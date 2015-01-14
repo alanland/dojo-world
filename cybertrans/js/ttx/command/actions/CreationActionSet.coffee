@@ -185,28 +185,31 @@ define [
             # list
             cpList = cp.cpList
             list = {columns: cpList.ctrl.get 'columns'}
-            list.actions = @__getGridData(cpList.actionsGrid) # 查询按钮
+            list.actions = actionsExportId: 'list', items: @__getGridData(cpList.actionsGrid) # 查询按钮
             list.fields = @__getGridData(cpList.fieldsGrid) # 查询字段
             list.grid = {name: cpList.gridPane.ctrl.get('name')} # 表格
-            list.grid.actions = @__getGridData(cpList.gridPane.actionsGrid)
+            list.grid.actions = actionsExportId: 'bills', items: @__getGridData(cpList.gridPane.actionsGrid)
             list.grid.structure = @__getGridData(cpList.gridPane.structureGrid)
 
             #
             # bill
             cpBill = cp.cpBill
             bill = {columns: cpBill.ctrl.get 'columns'}
-            bill.actions = @__getGridData(cpBill.actionsGrid) # 查询按钮
+            bill.actions = actionsExportId: 'bill', items:@__getGridData(cpBill.actionsGrid) # 查询按钮
             bill.fields = @__getGridData(cpBill.fieldsGrid) # 查询字段
-            bill.grid = {name: cpBill.gridPane.ctrl.get('name')} # 表格
-            bill.grid.actions = @__getGridData(cpBill.gridPane.actionsGrid)
-            bill.grid.structure = @__getGridData(cpBill.gridPane.structureGrid)
+            if cpBill.gridPane
+                bill.grid = {name: cpBill.gridPane.ctrl.get('name')} # 表格
+                bill.grid.actions = actionsExportId: 'details', items:@__getGridData(cpBill.gridPane.actionsGrid)
+                bill.grid.structure = @__getGridData(cpBill.gridPane.structureGrid)
 
             #
             # detail
-            cpDetail = cp.cpDetail
-            detail = {columns: cpBill.ctrl.get 'columns'}
-            detail.actions = @__getGridData(cpDetail.actionsGrid) # 查询按钮
-            detail.fields = @__getGridData(cpDetail.fieldsGrid) # 查询字段
+            detail = {}
+            if cp.cpDetail
+                cpDetail = cp.cpDetail
+                detail = {columns: cpDetail.ctrl.get 'columns'}
+                detail.actions = actionsExportId: 'detail', items:@__getGridData(cpDetail.actionsGrid) # 查询按钮
+                detail.fields = @__getGridData(cpDetail.fieldsGrid) # 查询字段
 
             data = {
                 key: cp.ctrl.get('key')
@@ -223,7 +226,7 @@ define [
         viewModel_Create: ->
             # summary:
             #       保存新增的表模型
-            wso=@wso
+            wso = @wso
             if not @_checkViewModel()
                 return false
             data = @_getViewModelData()
@@ -237,7 +240,7 @@ define [
         viewModel_Update: ->
             # summary:
             #       保存新增的表模型
-            wso=@wso
+            wso = @wso
             if not @_checkViewModel()
                 return false
             data = @_getViewModelData()
@@ -255,7 +258,9 @@ define [
         navigatorSave: ->
             cp = @wso.cpNavigator
             data = cp.tree.model.store.query()
-            @wso.app.dataManager.put('rest/creation/navigator', {data: data}).then(
+            @wso.app.dataManager.put('rest/creation/navigator', {
+                key:'admin',# todo
+                data: data}).then(
                 (res)->
                     console.log res
                 (err)->

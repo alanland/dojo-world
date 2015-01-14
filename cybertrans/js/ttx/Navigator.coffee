@@ -41,17 +41,19 @@ define [
             #   根据传入的 nav 参数，生成 store和model，以及最终的widget
             #
             #   参数默认在 main 模块里面
-            @app = args.app
-            @url = args.app.server + 'rest/creation/navigator'
+            it = @
+            app = @app = args.app
+            @url = app.server + 'rest/creation/navigator'
             data = [
-                {"id": "root", "name": "TTX", "tid": "root"},
-                {"id": "user", "name": "用户", "tid": "bll:User", "parent": "root", oid: 'user'}
+                {"id": "root", "name": "TTX", "tid": "root"}
+#                {"id": "user", "name": "用户", "tid": "bll:User", "parent": "root", oid: 'user'}
             ]
-            store = new Memory({data: data});
-            store = new ObjectStore({
+#            store = @store = new Memory({data: data});
+            store = @store = new ObjectStore({
 #                url: args.app.server + 'rest/data/navigator',
-                url: @url,
-                handleAs: 'json'
+#                url: @url,
+#                handleAs: 'json'
+                data: data
             });
             model = new ObjectStoreModel({
                 store: store,
@@ -72,7 +74,6 @@ define [
             @widget.startup()
 
             # tree的 focusNode 事件绑定，发布事件，提供订阅
-            store = @store
             aspect.after @widget, 'focusNode', (node)->
                 # todo @store 是不是当前的store
                 topic.publish 'focusNavNode', store, node.item, node
@@ -80,11 +81,24 @@ define [
             # click 事件发布，参数为item
             onn @widget, 'click', (item)->
                 topic.publish 'clickNavNode', item
-            window.tree = @widget
+            @reload()
+        reload: ->
+            it = @
+            app = @app
+            app.dataManager.get('rest/creation/navigator').then(
+                (res)->
+                    if(res.code=='1')
+                        app.loginDialog.show()
+                    else
+#                        for item in it.store.query()
+#                            it.store.remove(item.id) if item.id!='root'
+                        for item in res
+                            it.store.put(item) if item.id!='root'
+            )
 
         postCreate: ->
             server = @app.server
-            thiz = this
+            it = this
             request(server + 'rest/data/navigator', {
                 handleAs: 'json'
             }).then(

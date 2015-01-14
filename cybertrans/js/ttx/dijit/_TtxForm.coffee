@@ -20,6 +20,7 @@ define [
     'dijit/form/DropDownButton'
     'dijit/form/ComboButton'
     'dijit/form/TextBox'
+    'dijit/form/NumberTextBox'
     'dijit/form/FilteringSelect'
     'dijit/layout/ContentPane'
     'dojox/mvc/at'
@@ -34,7 +35,7 @@ define [
     onn, domConstruct, geo, query, request,
     Memory, JsonRest,
     TitlePane, Toolbar, TooltipDialog, ConfirmTooltipDialog, Menu, MenuItem,
-    Form, Button, DropDownButton, ComboButton, TextBox, FilteringSelect,
+    Form, Button, DropDownButton, ComboButton, TextBox, NumberTextBox, FilteringSelect,
     ContentPane,
     at, getStateful, ModelRefController,
     Grid, Cache, AsyncCache, modules,
@@ -87,6 +88,10 @@ define [
             switch def.type
                 when 'string' then field = new TextBox(
                     name: def.field,
+                    value: at(ctrl, def.field)
+                )
+                when 'integer' then field = new NumberTextBox(
+                    name: def.field
                     value: at(ctrl, def.field)
                 )
                 when 'filteringSelect'
@@ -152,7 +157,7 @@ define [
 
         newTtxActionSet: (defs, actionMap)->
             dom = domConstruct.create 'div', {}
-            for def in defs
+            for def in defs.items
                 @addTtxAction def, dom, actionMap
             dom
 
@@ -249,8 +254,8 @@ define [
                 store: new Memory(data: [])
                 barTop: [{content: '<h1>' + def.name || '' + ' </h1>'}, listToolbar]
             }, args))
-            if def.actions
-                for adef in def.actions
+            if def.actions && def.actions.items
+                for adef in def.actions.items
                     btn = @newTtxAction(adef, {}, grid)
                     listToolbar.actionMap[adef.id] = btn
                     listToolbar.addChild btn
@@ -288,8 +293,8 @@ define [
                 }, args)
             )
 
-            if def.actions
-                for adef in def.actions
+            if def.actions && def.actions.items
+                for adef in def.actions.items
                     btn = @newTtxAction(adef, {}, grid)
                     listToolbar.actionMap[adef.id] = btn
                     listToolbar.addChild btn

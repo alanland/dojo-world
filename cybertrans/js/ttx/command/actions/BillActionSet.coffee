@@ -65,9 +65,10 @@ define [
             for k,v of getCtrlData(ctrl)
                 ctrl.set k, '' if !lang.isFunction(v)
             # 明细
-            it.cpBill.grid.store.muteQuery = true
-            it.cpBill.grid.model.clearCache()
-            it.cpBill.grid.body.refresh()
+            if it.cpBill.grid
+                it.cpBill.grid.store.muteQuery = true
+                it.cpBill.grid.model.clearCache()
+                it.cpBill.grid.body.refresh()
 
         edit: (item)->
             it = @wso
