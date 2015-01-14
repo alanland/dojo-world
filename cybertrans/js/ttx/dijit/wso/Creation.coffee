@@ -93,7 +93,7 @@ define [
             @inherited arguments
             it = @
             onn window, 'resize', ->
-                geo.setMarginBox(it.domNode, geo.getContentBox(it.workspace.domNode), true)
+                geo.setMarginBox(it.domNode, geo.getContentBox(it.workspace.domNode), true) if it.domNode
             aspect.after(@tc, 'selectChild', ()->
                 it.layoutPane arguments[1][0].domNode
             )
@@ -334,9 +334,9 @@ define [
                     detailFieldStore = new Memory(data: detail.fields, idProperty: 'id') if detail
                     data.list.grid.structure = header.fields.concat()
                     data.bill.fields = header.fields.concat()
-                    data.bill.grid.structure=detail.fields.concat() if detail
+                    data.bill.grid.structure = detail.fields.concat() if detail
                     data.detail.fields = detail.fields.concat() if detail
-#                    @__buildViewModelTcDataByBill()
+                #                    @__buildViewModelTcDataByBill()
                 @__buildViewModelTcDataByView(data)
                 msChanging = false
             ), true
@@ -356,7 +356,7 @@ define [
             headerData = @cache.table.get billData?.header
             detailData = @cache.table.get billData?.detail
             headerFieldStore = new Memory(data: headerData.fields, idProperty: 'field')
-            detailFieldStore = new Memory(data: detailData.fields, idProperty: 'field') if detailFieldStore
+            detailFieldStore = new Memory(data: detailData.fields, idProperty: 'field') if detailData
             @__buildViewTcList(def.list, billData, headerData, detailData, headerFieldStore, detailFieldStore)
             @__buildViewTcBill(def.bill, billData, headerData, detailData, headerFieldStore, detailFieldStore)
             @__buildViewTcDetail(def.detail, billData, headerData, detailData, headerFieldStore, detailFieldStore)
@@ -496,7 +496,7 @@ define [
             cpBill.ctrl.set 'columns', bill.columns
             cpBill.actionsGrid.setStore(new Memory data: bill.actions)
             cpBill.fieldsGrid.setStore(new Memory data: bill.fields)
-            if bill.detail
+            if bill.grid
                 cpBill.gridPane.ctrl.set 'name', bill.grid.name
                 cpBill.gridPane.actionsGrid.setStore(new Memory data: bill.grid.actions)
                 cpBill.gridPane.structureGrid.setStore(new Memory data: bill.grid.structure)

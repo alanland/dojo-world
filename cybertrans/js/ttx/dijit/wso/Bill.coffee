@@ -92,8 +92,9 @@ define [
         postCreate: ->
             @inherited arguments
             it = @
+            # todo 空间销毁之后还存在，用 own
             onn window, 'resize', ->
-                geo.setMarginBox(it.domNode, geo.getContentBox(it.workspace.domNode), true)
+                geo.setMarginBox(it.domNode, geo.getContentBox(it.workspace.domNode), true) if it.domNode
             aspect.after(@tc, 'selectChild', ()->
                 pane = arguments[1][0]
                 it.layoutPane pane.domNode
@@ -104,11 +105,11 @@ define [
                 dm.getBillModel(vm.billKey).then((bm)->
                     it.billModel = bm
                     dl = [dm.getTableModel(bm.header)]
-                    dl.push(dl.push() if bm.details) if bm.details
+                    dl.push(dm.getTableModel(bm.detail)) if bm.detail
                     new DeferredList(dl).then(
                         (res)->
                             it.headerTableModel = res[0][1]
-                            it.detailTableModel = res[1][1] if bm.details
+                            it.detailTableModel = res[1][1] if bm.detail
 
                             # action sets 加载
                             it.actionSets.global = new BillActionSet wso: it
@@ -209,6 +210,9 @@ define [
             ctrl = cp.ctrl = new ModelRefController model: getStateful {}
             fieldMap = cp.fieldMap = {}
             @addTtxFieldSet(def.fields, ctrl, def.columns, form.domNode, fieldMap)
+
+        _finishBuild: ->
+            ''
 
         _getGridFieldsToRequest: (tableModel, gridDf)->
             # 获取表格要向服务端请求的字段

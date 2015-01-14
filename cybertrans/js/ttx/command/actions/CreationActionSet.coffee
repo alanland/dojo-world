@@ -258,9 +258,7 @@ define [
         navigatorSave: ->
             cp = @wso.cpNavigator
             data = cp.tree.model.store.query()
-            @wso.app.dataManager.put('rest/creation/navigator', {
-                key:'admin',# todo
-                data: data}).then(
+            @wso.app.dataManager.put('rest/creation/navigator', {data: data}).then(
                 (res)->
                     console.log res
                 (err)->

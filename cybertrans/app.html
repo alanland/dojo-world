@@ -24,6 +24,7 @@
     contextPath = location.pathname.substring(0, location.pathname.lastIndexOf('/'));
     dojoConfig = {
         async: true,
+        isDebug: true,
         parseOnLoad: true,
         packages: [
             {name: "ttx", location: contextPath + "/js/ttx"}
